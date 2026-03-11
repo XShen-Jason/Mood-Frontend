@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { listTemplates, renderProject } from '../api/client.js';
 
 const BASE_DOMAIN = '885201314.xyz';
@@ -13,13 +14,11 @@ export default function Builder() {
     const [subdomain, setSubdomain] = useState('');
     const [fieldValues, setFieldValues] = useState({});
     const [loading, setLoading] = useState(false);
-    const [fetchError, setFetchError] = useState(null);
-    const [result, setResult] = useState(null);   // { url, previewUrl }
-    const [submitError, setSubmitError] = useState(null);
+    const [initialLoading, setInitialLoading] = useState(true);
+    const [result, setResult] = useState(null); // { url, previewUrl }
 
     // BSR (Browser-Side Rendering) Raw HTML
     const [rawHtml, setRawHtml] = useState(null);
-    const [initialLoading, setInitialLoading] = useState(true);
 
     // Load template list once
     useEffect(() => {
@@ -35,7 +34,7 @@ export default function Builder() {
                     setSelected(null);
                 }
             })
-            .catch((e) => setFetchError(e.message))
+            .catch((e) => toast.error(`模板加载失败：${e.message}`))
             .finally(() => setInitialLoading(false));
     }, [templateName]);
 
@@ -46,16 +45,14 @@ export default function Builder() {
             return;
         }
 
-        // Fetch raw HTML from API
-        fetch(import.meta.env.VITE_API_BASE_URL
-            ? `${import.meta.env.VITE_API_BASE_URL}/api/template/raw/${selectedTemplate.name}`
-            : `http://localhost:3000/api/template/raw/${selectedTemplate.name}`)
+        const apiBase = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
+        fetch(`${apiBase}/api/template/raw/${selectedTemplate.name}`)
             .then(res => {
                 if (!res.ok) throw new Error('Failed to fetch raw template');
                 return res.text();
             })
             .then(html => setRawHtml(html))
-            .catch(err => console.error("[BSR Error]", err));
+            .catch(err => console.error('[BSR Error]', err));
     }, [selectedTemplate]);
 
     function handleTemplateChange(e) {
@@ -63,20 +60,19 @@ export default function Builder() {
         setSelected(found);
         setFieldValues({});
         setResult(null);
-        setSubmitError(null);
         if (found) navigate(`/builder/${found.name}`, { replace: true });
         else navigate('/builder', { replace: true });
     }
 
     async function handleSubmit(e) {
         e.preventDefault();
-        setSubmitError(null);
         setResult(null);
 
-        if (!selectedTemplate) return setSubmitError('请选择一个模板');
-        if (!subdomain) return setSubmitError('请填写子域名');
+        if (!selectedTemplate) return toast.error('请选择一个模板');
+        if (!subdomain) return toast.error('请填写子域名');
 
         setLoading(true);
+        const toastId = toast.loading('正在全网生成中...');
         try {
             const response = await renderProject({
                 subdomain,
@@ -84,18 +80,27 @@ export default function Builder() {
                 data: fieldValues,
             });
 
-            // Render endpoint returns { code: 0, data: { url: ... } }
             if (response.code !== 0) {
-                throw new Error(response.message || '生成失败');
+                toast.error(response.message || '生成失败', { id: toastId });
+                return;
             }
 
             const pageUrl = response.data?.url || `https://${subdomain}.${BASE_DOMAIN}/`;
-            setResult({
-                url: pageUrl,
-                previewUrl: `${pageUrl}?preview=${Date.now()}`
-            });
+            const previewUrl = `${pageUrl}?preview=${Date.now()}`;
+            setResult({ url: pageUrl, previewUrl });
+
+            toast.success(
+                <span>
+                    🎉 发布成功！<br />
+                    <a href={previewUrl} target="_blank" rel="noopener noreferrer"
+                        style={{ color: '#d6336c', fontWeight: 'bold' }}>
+                        点击预览 →
+                    </a>
+                </span>,
+                { id: toastId, duration: 6000 }
+            );
         } catch (err) {
-            setSubmitError(err.message);
+            toast.error(err.message, { id: toastId });
         } finally {
             setLoading(false);
         }
@@ -104,18 +109,12 @@ export default function Builder() {
     // --- BSR Real-time Preview Generation ---
     let previewHtml = '';
     if (rawHtml && selectedTemplate) {
-        // 1. Inject <base> tag so relative assets resolve perfectly to the CDN
         const baseTag = `<base href="https://romancespace.885201314.xyz/assets/${selectedTemplate.name}/" />`;
         previewHtml = rawHtml.replace('<head>', `<head>\n  ${baseTag}`);
-
-        // 2. Simple template engine to replace {{key}} with values or defaults
         previewHtml = previewHtml.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
             const k = key.trim();
-            // User typed value?
-            if (fieldValues[k] !== undefined && fieldValues[k] !== '') {
-                return fieldValues[k];
-            }
-            return ''; // Leave empty if not typed yet (the schema default logic can be added if fields were objects, but currently fields are just strings)
+            if (fieldValues[k] !== undefined && fieldValues[k] !== '') return fieldValues[k];
+            return '';
         });
     }
 
@@ -123,8 +122,6 @@ export default function Builder() {
         <div className="page container" style={{ maxWidth: 1000 }}>
             <h1 className="section-title">✏️ 创建专属页面</h1>
             <p className="section-sub">填写信息后，系统将即时生成带独立域名的浪漫网页。</p>
-
-            {fetchError && <div className="alert alert--error">模板加载失败：{fetchError}</div>}
 
             {result && (
                 <div className="alert alert--success" style={{ margin: '0 auto 1.5rem' }}>
@@ -134,15 +131,9 @@ export default function Builder() {
                             访问页面 ↗
                         </a>
                         <a href={result.previewUrl} target="_blank" rel="noopener noreferrer" className="btn btn--outline btn--sm">
-                            分享预览版（绕过CDN缓存）
+                            预览版（绕过CDN缓存）
                         </a>
                     </div>
-                </div>
-            )}
-
-            {submitError && (
-                <div className="alert alert--error" style={{ margin: '0 auto 1rem' }}>
-                    {submitError}
                 </div>
             )}
 
