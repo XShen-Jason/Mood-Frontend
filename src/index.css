@@ -42,6 +42,15 @@ body {
     padding: 2.5rem 0 5rem;
 }
 
+@media (max-width: 768px) {
+    .container {
+        padding: 0 1rem;
+    }
+    .page {
+        padding: 1.5rem 0 4rem;
+    }
+}
+
 /* ── Navbar ──────────────────────────────────────────────────────────────── */
 .navbar {
     background: rgba(255, 255, 255, 0.92);
@@ -73,6 +82,23 @@ body {
 .navbar__links {
     display: flex;
     gap: 1.5rem;
+}
+
+@media (max-width: 600px) {
+    .navbar__inner {
+        flex-direction: column;
+        gap: 0.8rem;
+        padding-bottom: 0.5rem;
+    }
+    .navbar__links {
+        gap: 1rem;
+        width: 100%;
+        justify-content: center;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+    }
+    .navbar__links::-webkit-scrollbar { display: none; }
 }
 
 .navbar__links a {
@@ -273,6 +299,12 @@ body {
     gap: 1.25rem;
 }
 
+@media (max-width: 480px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* ── Spinner ─────────────────────────────────────────────────────────────── */
 .spinner-wrap {
     display: flex;
@@ -336,6 +368,23 @@ body {
     flex-wrap: wrap;
 }
 
+@media (max-width: 768px) {
+    .hero {
+        padding: 3.5rem 1rem 3rem;
+    }
+    .hero__emoji {
+        font-size: 3rem;
+    }
+    .hero__sub {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+    .hero__actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 /* ── Features ────────────────────────────────────────────────────────────── */
 .feature-icon {
     font-size: 1.8rem;
@@ -395,6 +444,29 @@ body {
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     padding: 2rem;
+}
+
+@media (max-width: 768px) {
+    .builder-card {
+        padding: 1.25rem;
+    }
+}
+
+/* ── Mockup Scaling for Small Screens ────────────────────────────────────── */
+@media (max-width: 400px) {
+    .mobile-mockup {
+        transform: scale(0.9);
+    }
+}
+
+@media (max-width: 350px) {
+    .mobile-mockup {
+        transform: scale(0.8);
+    }
+}
+
+.builder-preview-container {
+    transition: all var(--ease);
 }
 
 .builder-divider {

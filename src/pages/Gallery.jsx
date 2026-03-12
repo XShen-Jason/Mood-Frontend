@@ -51,8 +51,8 @@ function TemplateCard({ t }) {
                 <p className="tmpl-card__title">📦 款式代码：{t.name}</p>
                 <p className="tmpl-card__desc">
                     {t.static
-                        ? '固定款式（纯视觉体验，内容无需修改）'
-                        : `你可以修改的内容：${(t.fields ?? []).map(f => {
+                        ? '固定款式（无需修改内容）'
+                        : `包含可填项：${(t.fields ?? []).map(f => {
                             if (typeof f === 'string') return FIELD_LABELS[f] || f;
                             return f.label || f.id || f.key || '未知字段';
                         }).join('、') || '无'}`}

@@ -13,10 +13,10 @@ export default function Home() {
             <section className="hero">
                 <span className="hero__emoji">💕</span>
                 <h1 className="hero__title">
-                    打造你的<span>专属浪漫网页</span>
+                    让每一次告白<span>更具仪式感</span>
                 </h1>
                 <p className="hero__sub">
-                    选择心仪模板，填入你们之间的故事，一键生成专属链接——送给最重要的那个人。
+                    选中心仪款式，填入浪漫故事，秒速生成专属纪念网页。
                 </p>
                 <div className="hero__actions">
                     <Link to="/gallery" className="btn btn--primary">挑选心仪款式 →</Link>

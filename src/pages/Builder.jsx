@@ -278,18 +278,20 @@ export default function Builder() {
 
                 {/* Right Panel: Live Preview iframe (BSR) - Mobile Form Factor */}
                 {selectedTemplate && rawHtml && (
-                    <div className="builder-preview-wrapper" style={{ flex: '1 1 400px', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1.5rem', background: '#f8fafc', borderRadius: '16px', margin: 0 }}>
+                    <div className="builder-preview-container" style={{ flex: '1 1 300px', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1.5rem', background: '#f8fafc', borderRadius: '16px', margin: 0, overflow: 'hidden' }}>
                         <div className="mobile-mockup" style={{ 
                             width: '320px', 
-                            height: '600px', 
+                            height: '580px', 
+                            maxWidth: '100%',
                             background: '#fff', 
                             borderRadius: '36px', 
                             boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.25)',
-                            border: '12px solid #0f172a',
+                            border: '10px solid #0f172a',
                             overflow: 'hidden',
                             position: 'relative',
                             display: 'flex',
-                            flexDirection: 'column'
+                            flexDirection: 'column',
+                            transformOrigin: 'top center'
                         }}>
                             <div style={{ padding: '8px 16px', background: '#f1f5f9', borderBottom: '1px solid #e2e8f0', fontSize: '13px', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span>{FIELD_LABELS.title ? '预览效果' : 'Preview'}</span>
