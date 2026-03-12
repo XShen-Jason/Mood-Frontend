@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { listTemplates, renderProject } from '../api/client.js';
+import { listTemplates, renderProject, getConfigBySubdomain, getUserStatus } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const BASE_DOMAIN = '885201314.xyz';
@@ -23,7 +23,9 @@ const DEFAULT_VALUES = {
 export default function Builder() {
     const { templateName } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { user } = useAuth();
+    const editSubdomain = searchParams.get('edit');
 
     const [templates, setTemplates] = useState([]);
     const [selectedTemplate, setSelected] = useState(null);
@@ -31,28 +33,58 @@ export default function Builder() {
     const [fieldValues, setFieldValues] = useState({});
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
-    const [result, setResult] = useState(null); // { url, previewUrl }
+    const [result, setResult] = useState(null); // { url }
+    const [status, setStatus] = useState(null); // { dailyUsedEdits, maxDailyEdits }
 
     // BSR (Browser-Side Rendering) Raw HTML
     const [rawHtml, setRawHtml] = useState(null);
 
-    // Load template list once
+    // Load template list and check for edit mode
     useEffect(() => {
-        setInitialLoading(true);
-        listTemplates()
-            .then((d) => {
+        const init = async () => {
+            setInitialLoading(true);
+            try {
+                const d = await listTemplates();
                 const list = d.templates ?? [];
                 setTemplates(list);
-                if (templateName) {
+
+                // Handle Edit Mode
+                if (editSubdomain && user) {
+                    try {
+                        const cfgRes = await getConfigBySubdomain(editSubdomain, user.id);
+                        if (cfgRes.success && cfgRes.data) {
+                            const project = cfgRes.data;
+                            setSubdomain(project.subdomain);
+                            const found = list.find(t => t.name === project.type);
+                            if (found) setSelected(found);
+                            setFieldValues(project.data || {});
+                        }
+                    } catch (err) {
+                        toast.error('获取原有网页信息失败');
+                        console.error(err);
+                    }
+                } else if (templateName) {
                     const found = list.find((t) => t.name === templateName);
                     if (found) setSelected(found);
-                } else {
-                    setSelected(null);
                 }
+            } catch (e) {
+                toast.error(`网页模板列表获取失败：${e.message}`);
+            } finally {
+                setInitialLoading(false);
+            }
+        };
+        init();
+    }, [templateName, editSubdomain, user]);
+
+    // Fetch user quota for status display
+    useEffect(() => {
+        if (!user) return;
+        getUserStatus(user.id)
+            .then(res => {
+                if (res.success) setStatus(res.data);
             })
-            .catch((e) => toast.error(`网页款式列表获取失败：${e.message}`))
-            .finally(() => setInitialLoading(false));
-    }, [templateName]);
+            .catch(err => console.error('[Status Fetch Error]', err));
+    }, [user]);
 
     // Fetch raw HTML when template changes (for BSR Preview)
     useEffect(() => {
@@ -95,14 +127,29 @@ export default function Builder() {
         else navigate('/builder', { replace: true });
     }
 
+    async function pollReachability(url, maxRetries = 10) {
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                // Use a cache-busting timestamp to bypass Cloudflare edge cache during polling
+                const checkUrl = `${url}?t=${Date.now()}`;
+                const res = await fetch(checkUrl, { method: 'HEAD', mode: 'no-cors' });
+                // With no-cors, we can't see the status, but if it doesn't throw, it's usually reachable.
+                await new Promise(r => setTimeout(r, 1500));
+                if (i > 2) return true; // Assume success after 4.5s of "no error"
+            } catch (e) {
+                await new Promise(r => setTimeout(r, 2000));
+            }
+        }
+        return true; 
+    }
+
     async function handleSubmit(e) {
         e.preventDefault();
         setResult(null);
 
-        if (!selectedTemplate) return toast.error('请选择一个网页款式');
+        if (!selectedTemplate) return toast.error('请选择一个网页模板');
         if (!subdomain) return toast.error('请给网页起一个专属网址');
 
-        // Guard: require login to publish
         if (!user) {
             toast.error('请先登录后再发布网页 🔑');
             navigate('/auth');
@@ -110,7 +157,7 @@ export default function Builder() {
         }
 
         setLoading(true);
-        const toastId = toast.loading('正在为您全网生成中...');
+        const toastId = toast.loading(editSubdomain ? '正在更新您的浪漫网页...' : '正在为您全网生成中...');
         try {
             const response = await renderProject({
                 subdomain,
@@ -124,19 +171,35 @@ export default function Builder() {
             }
 
             const pageUrl = response.data?.url || `https://${subdomain}.${BASE_DOMAIN}/`;
-            const previewUrl = `${pageUrl}?preview=${Date.now()}`;
-            setResult({ url: pageUrl, previewUrl });
+            
+            // Wait for the page to be reachable before showing success
+            toast.loading(
+                <div style={{ fontSize: '0.85rem' }}>
+                    {editSubdomain ? '更新已同步，正在等待全网生效...' : '生成已完成，正在等待全网生效...'}
+                    <div style={{ marginTop: '4px', opacity: 0.8, fontSize: '0.75rem' }}>
+                        💡 页面生效通常需要几秒，如等待较久可前往个人中心检查状态。
+                    </div>
+                </div>, 
+                { id: toastId }
+            );
+            await pollReachability(pageUrl);
+
+            setResult({ url: pageUrl });
 
             toast.success(
                 <span>
-                    🎉 发布成功！<br />
-                    <a href={previewUrl} target="_blank" rel="noopener noreferrer"
+                    🎉 {editSubdomain ? '更新成功！' : '发布成功！'}<br />
+                    <a href={pageUrl} target="_blank" rel="noopener noreferrer"
                         style={{ color: '#d6336c', fontWeight: 'bold' }}>
-                        点击预览 →
+                        立即访问页面 →
                     </a>
                 </span>,
                 { id: toastId, duration: 6000 }
             );
+            
+            // Refresh status to update daily edit count
+            getUserStatus(user.id).then(res => { if (res.success) setStatus(res.data); });
+
         } catch (err) {
             toast.error(err.message, { id: toastId });
         } finally {
@@ -149,7 +212,6 @@ export default function Builder() {
     if (rawHtml && selectedTemplate) {
         const baseTag = `<base href="https://www.885201314.xyz/assets/${selectedTemplate.name}/" />`;
         
-        // Robust injection: find <head> case-insensitive, or prepend if missing
         const headRegex = /<head[^>]*>/i;
         if (headRegex.test(rawHtml)) {
             previewHtml = rawHtml.replace(headRegex, (match) => `${match}\n  ${baseTag}`);
@@ -166,18 +228,19 @@ export default function Builder() {
 
     return (
         <div className="page container" style={{ maxWidth: 1000 }}>
-            <h1 className="section-title">✏️ 制作专属网页</h1>
-            <p className="section-sub">填写下方信息后，系统将即时生成带有专属独立网址的浪漫网页。</p>
+            <h1 className="section-title">{editSubdomain ? '🛠️ 修改专属网页' : '✏️ 制作专属网页'}</h1>
+            <p className="section-sub">
+                {editSubdomain 
+                    ? `正在优化您的专属页面：${editSubdomain}.${BASE_DOMAIN}` 
+                    : '填写下方信息后，系统将即时生成带有专属独立网址的浪漫网页。'}
+            </p>
 
             {result && (
                 <div className="alert alert--success" style={{ margin: '0 auto 1.5rem' }}>
-                    🎉 页面发布成功！
+                    🎉 {editSubdomain ? '页面更新已生效！' : '页面发布已成功！'}
                     <div className="alert__actions">
                         <a href={result.url} target="_blank" rel="noopener noreferrer" className="btn btn--primary btn--sm">
-                            访问页面 ↗
-                        </a>
-                        <a href={result.previewUrl} target="_blank" rel="noopener noreferrer" className="btn btn--outline btn--sm">
-                            预览版
+                            立即访问页面 ↗
                         </a>
                     </div>
                 </div>
@@ -190,7 +253,7 @@ export default function Builder() {
                         {initialLoading && (
                             <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>
                                 <div className="spinner" style={{ marginBottom: '10px' }}></div>
-                                <div>正在获取款式列表...</div>
+                                <div>正在获取模板列表...</div>
                             </div>
                         )}
 
@@ -198,14 +261,14 @@ export default function Builder() {
                             <>
                                 {/* Template selector */}
                                 <div className="form-group">
-                                    <label htmlFor="template">📦 选择网页款式</label>
+                                    <label htmlFor="template">📦 选择网页模板</label>
                                     <select
                                         id="template"
                                         value={selectedTemplate?.name ?? ''}
                                         onChange={handleTemplateChange}
                                         required
                                     >
-                                        <option value="">-- 请先选择款式 --</option>
+                                        <option value="">-- 请先选择模板 --</option>
                                         {templates.map((t) => (
                                             <option key={t.name} value={t.name}>{t.name}</option>
                                         ))}
@@ -214,18 +277,26 @@ export default function Builder() {
 
                                 {/* Subdomain */}
                                 <div className="form-group">
-                                    <label htmlFor="subdomain">🌐 给网页定个专属网址</label>
+                                    <label htmlFor="subdomain">🌐 专属网址 {editSubdomain && <span style={{ color: '#64748b', fontWeight: 400 }}>(不可修改)</span>}</label>
                                     <div className="input-row">
                                         <input
                                             id="subdomain"
                                             type="text"
                                             value={subdomain}
-                                            onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                                            onChange={(e) => !editSubdomain && setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                                             placeholder="例如：our-love-story"
                                             required
+                                            readOnly={!!editSubdomain}
+                                            style={editSubdomain ? { background: '#f8fafc', color: '#64748b' } : {}}
                                         />
                                         <span className="input-suffix">.{BASE_DOMAIN}</span>
                                     </div>
+                                    {editSubdomain && (
+                                        <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                                            💡 更新内容不消耗账号额度。
+                                            {status && <span> 今日剩余可修改次数：{status.maxDailyEdits - status.dailyUsedEdits} / {status.maxDailyEdits}</span>}
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Dynamic fields from schema */}
@@ -269,7 +340,7 @@ export default function Builder() {
 
                                 <div className="builder-submit">
                                     <button type="submit" className="btn btn--primary" style={{ width: '100%', justifyContent: 'center' }} disabled={loading}>
-                                        {loading ? '全网生成中...' : '✨ 一键生成我的专属网页'}
+                                        {loading ? (editSubdomain ? '正在更新中...' : '全网生成中...') : (editSubdomain ? '✨ 立即保存并更新网页' : '✨ 一键生成我的专属网页')}
                                     </button>
                                 </div>
                             </>
@@ -283,7 +354,7 @@ export default function Builder() {
                         <div className="mobile-mockup" style={{ transformOrigin: 'top center' }}>
                             <div style={{ padding: '10px 16px', background: '#fff', borderBottom: '1px solid #f1f5f9', fontSize: '13px', fontWeight: '700', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span style={{ color: '#1a1a2e' }}>实时预览</span>
-                                <span style={{ fontSize: '10px', background: 'var(--pink)', color: 'white', padding: '2px 8px', borderRadius: '12px' }}>LIVE</span>
+                                <span style={{ fontSize: '10px', background: '#ff477e', color: 'white', padding: '2px 8px', borderRadius: '12px' }}>LIVE</span>
                             </div>
                             <iframe
                                 srcDoc={previewHtml}

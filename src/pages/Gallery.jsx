@@ -23,7 +23,7 @@ export default function Gallery() {
 
     return (
         <div className="page container">
-            <h1 className="section-title">🎨 网页款式大厅</h1>
+            <h1 className="section-title">🎨 网页模板大厅</h1>
             <p className="section-sub">挑选一个你喜欢的风格，开始制作你的专属浪漫网页吧！</p>
 
             {loading && <div className="spinner-wrap"><div className="spinner" /></div>}
@@ -31,7 +31,7 @@ export default function Gallery() {
 
             {!loading && !error && templates.length === 0 && (
                 <div className="alert alert--info">
-                    哎呀，目前还没有上架任何网页款式，请稍后再来看看。
+                    哎呀，目前还没有上架任何网页模板，请稍后再来看看。
                 </div>
             )}
 
@@ -48,10 +48,10 @@ function TemplateCard({ t }) {
     return (
         <div className="card tmpl-card">
             <div>
-                <p className="tmpl-card__title">📦 款式代码：{t.name}</p>
+                <p className="tmpl-card__title">📦 模板代码：{t.name}</p>
                 <p className="tmpl-card__desc">
                     {t.static
-                        ? '固定款式（无需修改内容）'
+                        ? '固定模板（无需修改内容）'
                         : `包含可填项：${(t.fields ?? []).map(f => {
                             if (typeof f === 'string') return FIELD_LABELS[f] || f;
                             return f.label || f.id || f.key || '未知字段';
@@ -71,7 +71,7 @@ function TemplateCard({ t }) {
                     预览
                 </a>
                 <Link to={`/builder/${t.name}`} className="btn btn--primary btn--sm">
-                    就选这个款式
+                    就选这个模板
                 </Link>
             </div>
         </div>

@@ -3,12 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext.jsx';
 import { supabase } from '../lib/supabase.js';
-
-const TIER_LABELS = {
-    free: { label: '🌟 体验用户', color: '#64748b' },
-    pro: { label: '💎 高级会员', color: '#7c3aed' },
-    lifetime: { label: '👑 终身贵宾', color: '#b45309' },
-};
+import { getUserStatus } from '../api/client.js';
 
 export default function MySpace() {
     const { user, profile, loading, signOut } = useAuth();
@@ -17,6 +12,8 @@ export default function MySpace() {
     const [loadingProjects, setLoadingProjects] = useState(true);
     const [generatingCode, setGeneratingCode] = useState(false);
     const [localInviteCode, setLocalInviteCode] = useState(null);
+    const [status, setStatus] = useState({ count: 0, maxDomains: 1, tier: 'free' });
+    const [loadingStatus, setLoadingStatus] = useState(true);
 
     // Guard: redirect to auth if not logged in
     useEffect(() => {
@@ -41,6 +38,17 @@ export default function MySpace() {
                 else setProjects(data ?? []);
                 setLoadingProjects(false);
             });
+    }, [user]);
+
+    // Load user quota status from backend
+    useEffect(() => {
+        if (!user) return;
+        getUserStatus(user.id)
+            .then(res => {
+                if (res.success) setStatus(res.data);
+            })
+            .catch(err => console.error('[Quota Fetch Error]', err))
+            .finally(() => setLoadingStatus(false));
     }, [user]);
 
     async function handleSignOut() {
@@ -77,7 +85,7 @@ export default function MySpace() {
         );
     }
 
-    const tierMeta = TIER_LABELS[profile?.tier ?? 'free'];
+    const tierMeta = TIER_LABELS[status.tier] || TIER_LABELS.free;
     const inviteCode = localInviteCode;
     const inviteUrl = inviteCode
         ? `${window.location.origin}/auth?ref=${inviteCode}`
@@ -94,9 +102,51 @@ export default function MySpace() {
                     <h1 className="myspace-username">
                         {profile?.display_name ?? profile?.username ?? user.email}
                     </h1>
-                    <span className="myspace-tier" style={{ color: tierMeta.color }}>
-                        {tierMeta.label}
+                    <span className="myspace-tier" style={{ color: 'var(--muted)' }}>
+                        {status.label || '🌟 体验用户'}
                     </span>
+                    
+                    {!loadingStatus && (
+                        <div className="myspace-quota-section" style={{ marginTop: '0.75rem', borderTop: '1px solid #f1f5f9', paddingTop: '0.75rem' }}>
+                            {/* Domain Quota */}
+                            <div className="quota-group" style={{ marginBottom: '1rem' }}>
+                                <div className="quota-label-row" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px', fontWeight: 600, color: '#64748b' }}>
+                                    <span>网页总额度: {status.count} / {status.maxDomains}</span>
+                                    <span>{Math.round((status.count / status.maxDomains) * 100)}%</span>
+                                </div>
+                                <div className="quota-bar-bg" style={{ height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+                                    <div 
+                                        className="quota-bar-fill" 
+                                        style={{ 
+                                            height: '100%', 
+                                            background: 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)', 
+                                            width: `${Math.min(100, (status.count / status.maxDomains) * 100)}%`,
+                                            transition: 'width 0.6s ease'
+                                        }} 
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Daily Edit Quota */}
+                            <div className="quota-group">
+                                <div className="quota-label-row" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px', fontWeight: 600, color: '#64748b' }}>
+                                    <span>今日修改模板: {status.dailyUsedEdits} / {status.maxDailyEdits}</span>
+                                    <span>{Math.round((status.dailyUsedEdits / status.maxDailyEdits) * 100)}%</span>
+                                </div>
+                                <div className="quota-bar-bg" style={{ height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+                                    <div 
+                                        className="quota-bar-fill" 
+                                        style={{ 
+                                            height: '100%', 
+                                            background: 'linear-gradient(90deg, var(--pink) 0%, #f472b6 100%)', 
+                                            width: `${Math.min(100, (status.dailyUsedEdits / status.maxDailyEdits) * 100)}%`,
+                                            transition: 'width 0.6s ease'
+                                        }} 
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
                 <button id="btn-signout" className="btn btn--outline btn--sm" onClick={handleSignOut}>
                     退出
@@ -156,7 +206,7 @@ export default function MySpace() {
                     <div className="alert alert--info">
                         暂未制作过网页。
                         <Link to="/gallery" style={{ marginLeft: '0.5rem', color: '#1d4ed8', fontWeight: 600 }}>
-                            去挑选款式 →
+                            去挑选模板 →
                         </Link>
                     </div>
                 )}
@@ -170,8 +220,8 @@ export default function MySpace() {
                                         🔗 {p.subdomain}.885201314.xyz
                                     </span>
                                     <span className="myspace-project-meta">
-                                        所选款式：{p.template_type} ·
-                                        更新于 {new Date(p.updated_at).toLocaleDateString('zh-CN')}
+                                        模板：{p.template_type} ·
+                                        更新于 {new Date(p.updated_at || p.created_at).toLocaleDateString('zh-CN')}
                                     </span>
                                 </div>
                                 <div className="myspace-project-actions">
@@ -201,9 +251,9 @@ export default function MySpace() {
             {/* ── Upgrade hint for free users ── */}
             {profile?.tier === 'free' && (
                 <div className="myspace-upgrade-hint">
-                    <span>💡 体验用户限制作 1 个专属网页，每天最多修改 3 次内容。升级高级会员更享受极速专线和无限功能。</span>
+                    <span>💡 体验用户限制作 {status?.maxDomains || 1} 个专属网页，每天最多修改 {status?.maxDailyEdits || 5} 次内容。升级高级会员以享受无限可能。</span>
                     <a href="#" className="btn btn--primary btn--sm" style={{ marginLeft: '1rem' }}>
-                        升级高级会员
+                        立即升级
                     </a>
                 </div>
             )}

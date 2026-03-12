@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 
 const FEATURES = [
-    { icon: '🎨', title: '精美网页款式', desc: '多款专业设计的浪漫主题网页，精心调配配色与动效，开箱即用。' },
+    { icon: '🎨', title: '精美网页模板', desc: '多款专业设计的浪漫主题网页，精心调配配色与动效，开箱即用。' },
     { icon: '⚡', title: '即时生成', desc: '填写内容后秒速生成专属网页，附赠属于你们的专属独立网址。' },
     { icon: '🚀', title: '极速访问', desc: '采用全球极速网络，情意传递零延迟，世界任意角落均可秒开。' },
     { icon: '🔒', title: '安全可靠', desc: '全程加密保护隐私，数据永久存于云端，随时随地重温美好。' },
@@ -16,10 +16,10 @@ export default function Home() {
                     让每一次告白<span>更具仪式感</span>
                 </h1>
                 <p className="hero__sub">
-                    选中心仪款式，填入浪漫故事，秒速生成专属纪念网页。
+                    选中心仪模板，填入浪漫故事，秒速生成专属纪念网页。
                 </p>
                 <div className="hero__actions">
-                    <Link to="/gallery" className="btn btn--primary">挑选心仪款式 →</Link>
+                    <Link to="/gallery" className="btn btn--primary">挑选心仪模板 →</Link>
                     <Link to="/builder" className="btn btn--outline">立即制作网页</Link>
                 </div>
             </section>

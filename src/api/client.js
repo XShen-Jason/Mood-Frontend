@@ -63,8 +63,21 @@ export async function renderProject(payload) {
         body: JSON.stringify({ userId, ...payload }),
     });
 }
+/**
+ * Get user tier, usage count, and max quota limit.
+ */
+export async function getUserStatus(userId) {
+    if (!userId) return null;
+    return apiFetch(`/api/project/status/${userId}`);
+}
 
 // ── Admin endpoints (require admin key) ──────────────────────────────────────
+/**
+ * Get existing project configuration by subdomain.
+ */
+export async function getConfigBySubdomain(subdomain, userId) {
+    return apiFetch(`/api/project/config-by-subdomain/${subdomain}?userId=${userId}`);
+}
 
 /** Upload a new template — admin only. */
 export async function uploadTemplate(formData, adminKey) {

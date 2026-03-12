@@ -275,7 +275,7 @@ export default function Auth() {
                 )}
 
                 <p className="auth-footer-link" style={{ display: view === 'form' ? 'block' : 'none' }}>
-                    <Link to="/gallery">← 先去挑选心仪款式，看完再注册</Link>
+                    <Link to="/gallery">← 先去挑选心仪模板，看完再注册</Link>
                 </p>
             </div>
         </div>
