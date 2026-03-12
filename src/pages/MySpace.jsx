@@ -85,7 +85,6 @@ export default function MySpace() {
         );
     }
 
-    const tierMeta = TIER_LABELS[status.tier] || TIER_LABELS.free;
     const inviteCode = localInviteCode;
     const inviteUrl = inviteCode
         ? `${window.location.origin}/auth?ref=${inviteCode}`
