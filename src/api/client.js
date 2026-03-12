@@ -2,6 +2,9 @@ import { supabase } from '../lib/supabase.js';
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 
+// Session-level cache for template list
+let templateCache = null;
+
 /**
  * Gets the current authenticated user's ID.
  * Returns null if not logged in.
@@ -32,23 +35,27 @@ async function apiFetch(path, options = {}) {
 
 /**
  * List all registered templates.
- * Primary: /templates.json — static file served directly by Nginx (fastest).
- * Fallback: /api/template/list — dynamic API endpoint.
+ * Uses a session-level cache to avoid redundant network requests across navigation.
  */
 export async function listTemplates() {
+    if (templateCache) return templateCache;
+
     try {
         // Try the static file first — it's served directly by Nginx without
         // hitting Node.js, making it extremely fast (< 5ms response time).
         const res = await fetch('/templates.json', { cache: 'no-cache' });
-        // Only parse if it's actually JSON. Nginx might return index.html (SPA fallback)
-        // if templates.json hasn't been generated yet, which would cause res.json() to fail.
         const contentType = res.headers.get('content-type');
         if (res.ok && contentType && contentType.includes('application/json')) {
-            return res.json();
+            const data = await res.json();
+            templateCache = data;
+            return data;
         }
     } catch { /* ignore, fall through to API */ }
+    
     // Fallback to the API if the static file doesn't exist yet
-    return apiFetch('/api/template/list');
+    const data = await apiFetch('/api/template/list');
+    templateCache = data;
+    return data;
 }
 
 /**

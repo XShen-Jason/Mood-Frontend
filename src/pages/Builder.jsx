@@ -20,9 +20,6 @@ const DEFAULT_VALUES = {
     paragraphs: '在这个特别的日子里，\n我想对你说，\n遇见你是我这辈子最幸运的事。'
 };
 
-// Global cache to prevent redundant fetches across navigation
-let globalTemplatesCache = [];
-
 export default function Builder() {
     const { templateName } = useParams();
     const navigate = useNavigate();
@@ -45,26 +42,12 @@ export default function Builder() {
     // Load template list and check for edit mode
     useEffect(() => {
         const init = async () => {
-            // Optimization: Use global cache if available
-            let list = globalTemplatesCache;
-            if (list.length === 0) {
-                setInitialLoading(true);
-                try {
-                    const d = await listTemplates();
-                    list = d.templates ?? [];
-                    globalTemplatesCache = list;
-                    setTemplates(list);
-                } catch (e) {
-                    toast.error(`网页模板列表获取失败：${e.message}`);
-                    setInitialLoading(false);
-                    return;
-                }
-            } else if (templates.length === 0) {
-                // If cache exists but state is empty (e.g., component remounted)
-                setTemplates(list);
-            }
-
+            setInitialLoading(true);
             try {
+                const d = await listTemplates();
+                const list = d.templates ?? [];
+                setTemplates(list);
+
                 // Handle Edit Mode
                 if (editSubdomain && user) {
                     const cfgRes = await getConfigBySubdomain(editSubdomain, user.id);
@@ -72,16 +55,20 @@ export default function Builder() {
                         const project = cfgRes.data;
                         setSubdomain(project.subdomain);
                         const found = list.find(t => t.name === project.template_type);
-                        if (found) setSelected(found);
-                        setFieldValues(project.data || {});
+                        if (found) {
+                            setSelected(found);
+                            // Set field values DIRECTLY here to ensure they are available
+                            // before the BSR fetch effect runs, and we will guard that effect.
+                            setFieldValues(project.data || {});
+                        }
                     }
                 } else if (templateName) {
                     const found = list.find((t) => t.name === templateName);
                     if (found) setSelected(found);
                 }
-            } catch (err) {
-                console.error('[Builder Init Error]', err);
-                if (editSubdomain) toast.error('获取原有网页信息失败');
+            } catch (e) {
+                console.error('[Builder Init Error]', e);
+                toast.error(`初始化失败：${e.message}`);
             } finally {
                 setInitialLoading(false);
             }
@@ -107,18 +94,24 @@ export default function Builder() {
         }
 
         // Pre-fill default values for the selected template
+        // Guard: If we are in edit mode and fieldValues already has entries, 
+        // it means we just loaded the project data. DON'T overwrite with defaults.
+        const isEditModeJustLoaded = editSubdomain && Object.keys(fieldValues).length > 0;
+
         if (!selectedTemplate.static && selectedTemplate.fields) {
-            const initialVals = {};
-            selectedTemplate.fields.forEach(f => {
-                const key = typeof f === 'string' ? f : (f.id || f.key);
-                const defaultValue = typeof f === 'string' 
-                    ? (DEFAULT_VALUES[f] || '') 
-                    : (f.default !== undefined ? f.default : (DEFAULT_VALUES[key] || ''));
-                initialVals[key] = defaultValue;
-            });
-            setFieldValues(initialVals);
+            if (!isEditModeJustLoaded) {
+                const initialVals = {};
+                selectedTemplate.fields.forEach(f => {
+                    const key = typeof f === 'string' ? f : (f.id || f.key);
+                    const defaultValue = typeof f === 'string' 
+                        ? (DEFAULT_VALUES[f] || '') 
+                        : (f.default !== undefined ? f.default : (DEFAULT_VALUES[key] || ''));
+                    initialVals[key] = defaultValue;
+                });
+                setFieldValues(initialVals);
+            }
         } else {
-            setFieldValues({});
+            if (!isEditModeJustLoaded) setFieldValues({});
         }
 
         const apiBase = import.meta.env.VITE_API_BASE_URL ?? '';
