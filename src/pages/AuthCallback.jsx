@@ -1,17 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase.js';
 
-/**
- * /auth/callback
- *
- * Supabase redirects here after:
- *   1. Email verification (type=signup)
- *   2. Password reset (type=recovery)
- *
- * For recovery, we show an inline "Set New Password" form.
- * For signup, we show an activation success message.
- */
 export default function AuthCallback() {
     const [status, setStatus] = useState('loading'); // 'loading' | 'success' | 'recovery' | 'error'
     const [errorMsg, setErrorMsg] = useState('');
@@ -19,52 +9,54 @@ export default function AuthCallback() {
     // Password reset state
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [resetLoading, setResetLoading] = useState(false);
     const [resetDone, setResetDone] = useState(false);
 
+    // Capture URL immediately on mount to prevent Supabase from clearing it before we check
+    const initialUrlHash = useRef(window.location.hash);
+    const initialUrlSearch = useRef(window.location.search);
+
     useEffect(() => {
+        let isMounted = true;
+
         async function handleCallback() {
             try {
-                // Supabase JS automatically picks up the code from the URL
-                const { error } = await supabase.auth.getSession();
-                if (error) throw error;
+                // Determine the intention from the URL *before* Supabase touches it
+                const hashParams = new URLSearchParams(initialUrlHash.current.replace('#', ''));
+                const searchParams = new URLSearchParams(initialUrlSearch.current);
+                
+                // On mobile clients like QQ Browser, 'type' might be in search rather than hash
+                const isRecovery = hashParams.get('type') === 'recovery' || searchParams.get('type') === 'recovery';
 
-                // If there's a `code` param (PKCE), exchange it explicitly
-                const params = new URLSearchParams(window.location.search);
-                const code = params.get('code');
+                // We still need to let Supabase process the code/token
+                const code = searchParams.get('code');
                 if (code) {
-                    const { error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code);
-                    if (exchangeErr) throw exchangeErr;
+                    const { error } = await supabase.auth.exchangeCodeForSession(code);
+                    if (error) throw error;
+                } else {
+                    // Implicit flow handling fallback
+                    const { error } = await supabase.auth.getSession();
+                    if (error) throw error;
                 }
 
-                // After exchange, check the session type via onAuthStateChange
-                // The event will be PASSWORD_RECOVERY for reset links
-                const { data: { session } } = await supabase.auth.getSession();
+                if (!isMounted) return;
 
-                // Check URL hash for type (implicit flow) or rely on the recovery session
-                const hash = window.location.hash;
-                const hashParams = new URLSearchParams(hash.replace('#', ''));
-                const type = hashParams.get('type') || params.get('type');
-
-                if (type === 'recovery' || (session && session.user)) {
-                    // If there's an active session after a code exchange and type is recovery
-                    // We need to check if this came from a password reset
-                    if (type === 'recovery') {
-                        setStatus('recovery');
-                    } else {
-                        setStatus('success');
-                    }
+                if (isRecovery) {
+                    setStatus('recovery');
                 } else {
                     setStatus('success');
                 }
             } catch (err) {
                 console.error('[AuthCallback]', err);
+                if (!isMounted) return;
                 setErrorMsg(err.message ?? '验证失败，链接可能已过期。');
                 setStatus('error');
             }
         }
 
-        // Also listen for the PASSWORD_RECOVERY event from Supabase
+        // Also listen for the EVENT because sometimes the URL doesn't have type=recovery
+        // but Supabase knows it's a recovery flow from the JWT
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
             if (event === 'PASSWORD_RECOVERY') {
                 setStatus('recovery');
@@ -73,7 +65,10 @@ export default function AuthCallback() {
 
         handleCallback();
 
-        return () => subscription.unsubscribe();
+        return () => {
+            isMounted = false;
+            subscription.unsubscribe();
+        };
     }, []);
 
     async function handlePasswordReset(e) {
@@ -161,27 +156,43 @@ export default function AuthCallback() {
                             <form onSubmit={handlePasswordReset} id="form-reset-password" style={{ textAlign: 'left', marginTop: '1.5rem' }}>
                                 <div className="form-group">
                                     <label htmlFor="new-password">新密码</label>
-                                    <input
-                                        id="new-password"
-                                        type="password"
-                                        value={newPassword}
-                                        onChange={e => setNewPassword(e.target.value)}
-                                        placeholder="至少 8 位"
-                                        minLength={8}
-                                        required
-                                    />
+                                    <div className="password-input-wrapper" style={{ position: 'relative', display: 'flex' }}>
+                                        <input
+                                            id="new-password"
+                                            type={showPassword ? "text" : "password"}
+                                            value={newPassword}
+                                            onChange={e => setNewPassword(e.target.value)}
+                                            placeholder="至少 8 位"
+                                            minLength={8}
+                                            required
+                                            style={{ width: '100%', paddingRight: '2.5rem' }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            style={{
+                                                position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+                                                background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: '#888'
+                                            }}
+                                        >
+                                            {showPassword ? '🙈' : '👁️'}
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="confirm-password">确认新密码</label>
-                                    <input
-                                        id="confirm-password"
-                                        type="password"
-                                        value={confirmPassword}
-                                        onChange={e => setConfirmPassword(e.target.value)}
-                                        placeholder="再次输入新密码"
-                                        minLength={8}
-                                        required
-                                    />
+                                    <div className="password-input-wrapper" style={{ position: 'relative', display: 'flex' }}>
+                                        <input
+                                            id="confirm-password"
+                                            type={showPassword ? "text" : "password"}
+                                            value={confirmPassword}
+                                            onChange={e => setConfirmPassword(e.target.value)}
+                                            placeholder="再次输入新密码"
+                                            minLength={8}
+                                            required
+                                            style={{ width: '100%', paddingRight: '2.5rem' }}
+                                        />
+                                    </div>
                                 </div>
                                 <button
                                     id="btn-reset-password"
