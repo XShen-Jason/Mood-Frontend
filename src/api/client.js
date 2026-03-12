@@ -30,8 +30,19 @@ async function apiFetch(path, options = {}) {
 
 // ── Public endpoints (no auth required) ──────────────────────────────────────
 
-/** List all registered templates. */
+/**
+ * List all registered templates.
+ * Primary: /templates.json — static file served directly by Nginx (fastest).
+ * Fallback: /api/template/list — dynamic API endpoint.
+ */
 export async function listTemplates() {
+    try {
+        // Try the static file first — it's served directly by Nginx without
+        // hitting Node.js, making it extremely fast (< 5ms response time).
+        const res = await fetch('/templates.json', { cache: 'no-cache' });
+        if (res.ok) return res.json();
+    } catch { /* ignore, fall through to API */ }
+    // Fallback to the API if the static file doesn't exist yet
     return apiFetch('/api/template/list');
 }
 

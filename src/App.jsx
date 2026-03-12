@@ -9,6 +9,7 @@ const Gallery = lazy(() => import('./pages/Gallery.jsx'));
 const Builder = lazy(() => import('./pages/Builder.jsx'));
 const Admin = lazy(() => import('./pages/Admin.jsx'));
 const Auth = lazy(() => import('./pages/Auth.jsx'));
+const AuthCallback = lazy(() => import('./pages/AuthCallback.jsx'));
 const MySpace = lazy(() => import('./pages/MySpace.jsx'));
 
 function Navbar() {
@@ -90,6 +91,7 @@ export default function App() {
                     <Route path="/builder/:templateName" element={<Builder />} />
                     <Route path="/admin/upload" element={<Admin />} />
                     <Route path="/auth" element={<Auth />} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
                     <Route path="/my-space" element={<MySpace />} />
                 </Routes>
             </Suspense>

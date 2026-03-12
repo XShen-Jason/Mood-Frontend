@@ -37,7 +37,15 @@ export default function Auth() {
     async function handleRegister(e) {
         e.preventDefault();
         setLoading(true);
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                // After email verification, redirect to our callback page.
+                // This works cross-device (PC registers, mobile clicks link → lands here).
+                emailRedirectTo: `${window.location.origin}/auth/callback`,
+            },
+        });
         if (error) {
             toast.error(error.message);
             setLoading(false);
