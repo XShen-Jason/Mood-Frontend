@@ -5,6 +5,7 @@ export default function Admin() {
     const [adminKey, setAdminKey] = useState('');
     const [templateName, setTemplateName] = useState('');
     const [files, setFiles] = useState([]);
+    const [syncToGithub, setSyncToGithub] = useState(true);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -36,6 +37,7 @@ export default function Admin() {
 
         const formData = new FormData();
         formData.append('templateName', templateName);
+        formData.append('syncToGithub', syncToGithub);
         files.forEach(file => {
             formData.append(file.name, file);
         });
@@ -145,6 +147,19 @@ export default function Admin() {
                             </ul>
                         </div>
                     )}
+                </div>
+
+                <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}>
+                    <input
+                        id="syncToGithub"
+                        type="checkbox"
+                        checked={syncToGithub}
+                        onChange={(e) => setSyncToGithub(e.target.checked)}
+                        style={{ cursor: 'pointer', width: 'auto' }}
+                    />
+                    <label htmlFor="syncToGithub" style={{ cursor: 'pointer', margin: 0, fontSize: '0.9rem', color: '#1d4ed8', fontWeight: 600 }}>
+                        ✨ 同时将文件同步备份到 GitHub 仓库 (推荐)
+                    </label>
                 </div>
 
                 <div className="builder-submit" style={{ marginTop: '1.5rem', display: 'flex', gap: '10px' }}>
