@@ -22,8 +22,8 @@ export default function Auth() {
     const [searchParams] = useSearchParams();
     const { user } = useAuth();
 
-    const [tab, setTab] = useState('login'); // 'login' | 'register'
-    const [view, setView] = useState('form'); // 'form' | 'forgot'
+    // modes: 'login' | 'register' | 'forgot'
+    const [tab, setTab] = useState('login'); 
     
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -33,20 +33,26 @@ export default function Auth() {
     const [loading, setLoading] = useState(false);
     const [forgotSent, setForgotSent] = useState(false);
 
-    // Initial load: Handle invite code persistence
+    // Initial load: Handle invite code persistence and mode switching
     useEffect(() => {
+        // 1. Handle URL Mode (?mode=register)
+        const mode = searchParams.get('mode');
+        if (mode === 'register' || mode === 'login' || mode === 'forgot') {
+            setTab(mode);
+        }
+
+        // 2. Handle Invite Code
         const urlRef = searchParams.get('ref');
         if (urlRef) {
-            // Save to localStorage with timestamp
             localStorage.setItem('rs_ref', JSON.stringify({ code: urlRef, time: Date.now() }));
             setInviteCode(urlRef.toUpperCase());
+            // If we have a referral, default to registration unless mode is explicitly set
+            if (!mode) setTab('register');
         } else {
-            // Try to load from localStorage
             const saved = localStorage.getItem('rs_ref');
             if (saved) {
                 try {
                     const { code, time } = JSON.parse(saved);
-                    // 1 day expiry (1 * 24 * 60 * 60 * 1000)
                     if (Date.now() - time < 86400000) {
                         setInviteCode(code.toUpperCase());
                     } else {
@@ -97,7 +103,6 @@ export default function Auth() {
         if (data.user && data.user.identities && data.user.identities.length === 0) {
             toast.error('该邮箱已被注册，请直接登录或找回密码。');
             setTab('login');
-            setView('form');
             setLoading(false);
             return;
         }
@@ -124,7 +129,6 @@ export default function Auth() {
 
         toast.success('注册成功！请查收验证邮件后登录。');
         setTab('login');
-        setView('form');
         setLoading(false);
     }
 
@@ -132,10 +136,6 @@ export default function Auth() {
         e.preventDefault();
         setLoading(true);
 
-        // Call the built-in reset password API directly.
-        // Note: Supabase will NOT send an email if the user does not exist,
-        // saving your Brevo quota automatically. However, it will return success 
-        // to prevent email enumeration attacks.
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: `${window.location.origin}/auth/callback`,
         });
@@ -143,7 +143,6 @@ export default function Auth() {
         if (error) {
             toast.error('发送失败：' + translateError(error.message));
         } else {
-            // We just tell the user explicitly it's sent to simplify UX.
             toast.success('密码重置链接已发送！');
             setForgotSent(true);
         }
@@ -155,26 +154,29 @@ export default function Auth() {
             <div className="auth-card">
                 <div className="auth-logo">💕</div>
                 <h1 className="auth-title">浪漫空间</h1>
-                <p className="auth-sub">登录后即可永久保存你的浪漫网页</p>
+                <p className="auth-sub">
+                    {tab === 'register' ? '加入我们，开启你的浪漫记录' : '登录后即可永久保存你的浪漫网页'}
+                </p>
 
-                {/* Tab switcher: Only Login and Register, hidden when in 'forgot' view */}
-                {view === 'form' && (
-                    <div className="auth-tabs">
-                        <button
-                            id="tab-login"
-                            className={`auth-tab ${tab === 'login' ? 'active' : ''}`}
-                            onClick={() => { setTab('login'); setView('form'); }}
-                        >登录</button>
-                        <button
-                            id="tab-register"
-                            className={`auth-tab ${tab === 'register' ? 'active' : ''}`}
-                            onClick={() => { setTab('register'); setView('form'); }}
-                        >注册</button>
-                    </div>
-                )}
+                {/* Tab switcher */}
+                <div className="auth-tabs">
+                    <button
+                        id="tab-login"
+                        className={`auth-tab ${tab === 'login' ? 'active' : ''}`}
+                        onClick={() => { setTab('login'); setForgotSent(false); }}
+                    >登录</button>
+                    <button
+                        id="tab-register"
+                        className={`auth-tab ${tab === 'register' ? 'active' : ''}`}
+                        onClick={() => { setTab('register'); setForgotSent(false); }}
+                    >注册</button>
+                    {tab === 'forgot' && (
+                        <button className="auth-tab active">找回密码</button>
+                    )}
+                </div>
 
                 {/* ── Login Form ── */}
-                {tab === 'login' && view === 'form' && (
+                {tab === 'login' && (
                     <form onSubmit={handleLogin} id="form-login">
                         <div className="form-group">
                             <label htmlFor="login-email">邮箱</label>
@@ -207,7 +209,7 @@ export default function Auth() {
                             <button
                                 type="button"
                                 className="auth-link-btn"
-                                onClick={() => { setView('forgot'); setForgotSent(false); }}
+                                onClick={() => { setTab('forgot'); setForgotSent(false); }}
                             >
                                 忘记密码？
                             </button>
@@ -218,8 +220,8 @@ export default function Auth() {
                     </form>
                 )}
 
-                {/* ── Forgot Password Form (inside Login tab) ── */}
-                {tab === 'login' && view === 'forgot' && (
+                {/* ── Forgot Password Form ── */}
+                {tab === 'forgot' && (
                     forgotSent
                         ? (
                             <div className="alert alert--success" style={{ marginTop: '0.5rem', textAlign: 'center' }}>
@@ -236,7 +238,7 @@ export default function Auth() {
                                         placeholder="你注册时使用的邮箱" required />
                                 </div>
                                 <p className="auth-disclaimer">
-                                    我们将向该邮箱发送密码重置链接。
+                                    我们将向该邮箱发送一条加密链接，点击即可重置密码。
                                 </p>
                                 <button id="btn-forgot-submit" type="submit" className="btn btn--primary auth-submit" disabled={loading}>
                                     {loading ? '发送中...' : '📧 发送重置链接'}
@@ -245,7 +247,7 @@ export default function Auth() {
                                     <button
                                         type="button"
                                         className="auth-link-btn"
-                                        onClick={() => setView('form')}
+                                        onClick={() => setTab('login')}
                                     >
                                         返回登录
                                     </button>
@@ -290,17 +292,19 @@ export default function Auth() {
                                 onChange={e => setInviteCode(e.target.value.toUpperCase())}
                                 placeholder="朋友的邀请码" maxLength={8} />
                         </div>
-                        <p className="auth-disclaimer">
-                            注册即代表您同意使用条款。体验用户每个账号可免费制作 1 个专属网址。<br />
-                            若连续 180 天无人访问，免费网址将被自动回收以节约资源。
-                        </p>
-                        <button id="btn-register-submit" type="submit" className="btn btn--primary auth-submit" disabled={loading}>
+                        <div className="auth-disclaimer" style={{ background: 'rgba(0,0,0,0.02)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #ff477e', fontSize: '12px' }}>
+                            注册即代表您同意使用条款。基础版每账号可免费制作 <b>1</b> 个专属网址。<br />
+                            <span style={{ opacity: 0.8, display: 'block', marginTop: '4px' }}>
+                                💡 若连续 180 天无人访问，该网址将被自动回收以节约服务器资源。
+                            </span>
+                        </div>
+                        <button id="btn-register-submit" type="submit" className="btn btn--primary auth-submit" style={{ marginTop: '1rem' }} disabled={loading}>
                             {loading ? '注册中...' : '🎉 立即注册'}
                         </button>
                     </form>
                 )}
 
-                <p className="auth-footer-link" style={{ display: view === 'form' ? 'block' : 'none' }}>
+                <p className="auth-footer-link">
                     <Link to="/gallery">← 先去挑选心仪模板，看完再注册</Link>
                 </p>
             </div>
