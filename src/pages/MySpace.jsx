@@ -8,6 +8,9 @@ import { getUserStatus } from '../api/client.js';
 export default function MySpace() {
     const { user, profile, loading, signOut } = useAuth();
     const navigate = useNavigate();
+    const [projects, setProjects] = useState([]);
+    const [loadingProjects, setLoadingProjects] = useState(true);
+    const [generatingCode, setGeneratingCode] = useState(false);
     const [localInviteCode, setLocalInviteCode] = useState(null);
     const [status, setStatus] = useState({ 
         count: 0, 
