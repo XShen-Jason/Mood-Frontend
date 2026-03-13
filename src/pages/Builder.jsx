@@ -166,6 +166,12 @@ export default function Builder() {
 
         if (!selectedTemplate) return toast.error('请选择一个网页模板');
         if (!subdomain) return toast.error('请给网页起一个专属网址');
+        
+        // Tier-based Length Guard: dynamic limit from backend status
+        const minLen = status?.minDomainLen ?? 3;
+        if (!editSubdomain && subdomain.length < minLen) {
+            return toast.error(`该域名前缀太短啦，您的等级至少需要 ${minLen} 个字符哦`);
+        }
 
         if (!user) {
             toast.error('请先登录后再发布网页 🔑');
@@ -309,6 +315,14 @@ export default function Builder() {
                                         />
                                         <span className="input-suffix">.{BASE_DOMAIN}</span>
                                     </div>
+                                    {!editSubdomain && subdomain && subdomain.length < (status?.minDomainLen ?? 3) && (
+                                        <p style={{ fontSize: '0.75rem', color: '#f87171', marginTop: '4px' }}>
+                                            ⚠️ 域名太短了，您的等级至少需要 {status?.minDomainLen ?? 3} 个字符
+                                        </p>
+                                    )}
+                                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                                        💡 推荐：使用你们的名字缩写或纪念日
+                                    </p>
                                     {editSubdomain && (
                                         <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
                                             💡 更新内容不消耗账号额度。
