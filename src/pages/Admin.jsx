@@ -5,6 +5,7 @@ export default function Admin() {
     const [adminKey, setAdminKey] = useState('');
     const [templateName, setTemplateName] = useState('');
     const [files, setFiles] = useState([]);
+    const [detectedTitle, setDetectedTitle] = useState('');
     const [syncToGithub, setSyncToGithub] = useState(true);
 
     const [loading, setLoading] = useState(false);
@@ -17,9 +18,23 @@ export default function Admin() {
         if (savedKey) setAdminKey(savedKey);
     }, []);
 
-    const handleFileChange = (e) => {
+    const handleFileChange = async (e) => {
         if (e.target.files) {
-            setFiles(Array.from(e.target.files));
+            const selectedFiles = Array.from(e.target.files);
+            setFiles(selectedFiles);
+            setDetectedTitle('');
+
+            // Try to pre-read config.json to show the Chinese title
+            const config = selectedFiles.find(f => f.name === 'config.json' || f.name === 'schema.json');
+            if (config) {
+                try {
+                    const text = await config.text();
+                    const json = JSON.parse(text);
+                    if (json.title) setDetectedTitle(json.title);
+                } catch (err) {
+                    console.warn('Failed to parse config.json preview');
+                }
+            }
         }
     };
 
@@ -45,9 +60,10 @@ export default function Admin() {
         setLoading(true);
         try {
             const res = await uploadTemplate(formData, adminKey);
-            setSuccess(`模板 ${res.templateName} (${res.version}) 上传成功！`);
+            setSuccess(`模板 ${res.title || res.templateName} (${res.version}) 上传成功！`);
             setFiles([]);
             setTemplateName('');
+            setDetectedTitle('');
         } catch (err) {
             setError(err.message);
         } finally {
@@ -154,8 +170,13 @@ export default function Admin() {
                         <p style={{ color: '#7f8c8d', margin: 0, fontWeight: 500 }}>
                             {files.length > 0 ? `已选中 ${files.length} 个文件` : "点击或拖拽源文件到此处"}
                         </p>
+                        {detectedTitle && (
+                            <p style={{ color: '#d6336c', margin: '5px 0 0 0', fontWeight: 700, fontSize: '0.9rem' }}>
+                                ✨ 已检测到显示名称：{detectedTitle}
+                            </p>
+                        )}
                         <p style={{ fontSize: '0.8rem', color: '#a0aab2', marginTop: '5px' }}>
-                            必须包含 index.html 和 config.json (或旧的 schema.json)
+                            必须包含 index.html 和 config.json
                         </p>
                     </div>
 
