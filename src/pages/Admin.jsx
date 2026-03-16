@@ -12,11 +12,29 @@ export default function Admin() {
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
 
-    // Initialize admin key from local storage
+    // Initialize admin key from local storage with 24-hour expiration
     useEffect(() => {
-        const savedKey = localStorage.getItem('rs_admin_key');
-        if (savedKey) setAdminKey(savedKey);
+        const storedValue = localStorage.getItem('rs_admin_key');
+        if (storedValue) {
+            try {
+                const { key, timestamp } = JSON.parse(storedValue);
+                const oneDay = 24 * 60 * 60 * 1000;
+                if (Date.now() - timestamp < oneDay) {
+                    setAdminKey(key);
+                } else {
+                    localStorage.removeItem('rs_admin_key');
+                }
+            } catch (e) {
+                // If it's old plain string format or invalid JSON, ignore
+                localStorage.removeItem('rs_admin_key');
+            }
+        }
     }, []);
+
+    const saveAdminKey = (key) => {
+        const value = JSON.stringify({ key, timestamp: Date.now() });
+        localStorage.setItem('rs_admin_key', value);
+    };
 
     const handleFileChange = async (e) => {
         if (e.target.files) {
@@ -77,8 +95,8 @@ export default function Admin() {
             return setError('config.json 格式错误：请检查是否为有效的 JSON 文件');
         }
 
-        // Save key for future convenience
-        localStorage.setItem('rs_admin_key', adminKey);
+        // Save key with timestamp
+        saveAdminKey(adminKey);
 
         const formData = new FormData();
         formData.append('templateName', templateName);
@@ -106,7 +124,7 @@ export default function Admin() {
         setError(null);
         setSuccess(null);
         setLoading(true);
-        localStorage.setItem('rs_admin_key', adminKey);
+        saveAdminKey(adminKey);
         
         try {
             const res = await syncTemplates(adminKey);
@@ -123,7 +141,8 @@ export default function Admin() {
         setError(null);
         setSuccess(null);
         setLoading(true);
-        localStorage.setItem('rs_admin_key', adminKey);
+        // Save key with timestamp
+        saveAdminKey(adminKey);
         
         try {
             if (type === 'quotas') {
@@ -164,15 +183,18 @@ export default function Admin() {
                 <hr className="builder-divider" />
 
                 <div className="form-group">
-                    <label htmlFor="templateName">📁 模板英文名</label>
+                    <label htmlFor="templateName">📁 模板英文名 ID (需与 config.json 一致)</label>
                     <input
                         id="templateName"
                         type="text"
                         value={templateName}
                         onChange={(e) => setTemplateName(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                        placeholder="e.g. love_card_v2 (小写字母/数字/下划线)"
+                        placeholder="e.g. love_card_v2"
                         required
                     />
+                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                        * 此 ID 决定了网页的静态路径，且必须与文件夹内的 <code>config.json</code> 中的 <code>name</code> 字段严格一致。
+                    </p>
                 </div>
 
                 <div className="form-group">
@@ -230,8 +252,8 @@ export default function Admin() {
                         onChange={(e) => setSyncToGithub(e.target.checked)}
                         style={{ cursor: 'pointer', width: 'auto' }}
                     />
-                    <label htmlFor="syncToGithub" style={{ cursor: 'pointer', margin: 0, fontSize: '0.9rem', color: '#1d4ed8', fontWeight: 600 }}>
-                        ✨ 同时将文件同步备份到 GitHub 仓库 (推荐)
+                    <label htmlFor="syncToGithub" style={{ cursor: 'pointer', margin: 0, fontSize: '0.9rem', color: '#166534', fontWeight: 600 }}>
+                        🚀 同时自动推送到 GitHub 模板仓库 (生产发布必选)
                     </label>
                 </div>
 
