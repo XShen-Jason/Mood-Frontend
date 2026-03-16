@@ -45,7 +45,37 @@ export default function Admin() {
 
         if (!adminKey) return setError('请输入管理员密钥');
         if (!templateName) return setError('请输入模板英文名称');
-        if (files.length === 0) return setError('请至少选择一个文件（必须包含 index.html）');
+        
+        // 1. Basic format check for template name
+        if (!/^[a-z0-9_]+$/.test(templateName)) {
+            return setError('模板英文名不符合规范：仅限小写字母、数字和下划线');
+        }
+
+        if (files.length === 0) return setError('请至少选择一个文件');
+
+        // 2. Check for mandatory files
+        const hasIndex = files.some(f => f.name === 'index.html');
+        const configFile = files.find(f => f.name === 'config.json' || f.name === 'schema.json');
+        
+        if (!hasIndex) return setError('缺少核心文件：index.html');
+        if (!configFile) return setError('缺少配置文件：config.json');
+
+        // 3. Deep validation of config.json
+        try {
+            const configText = await configFile.text();
+            const configJson = JSON.parse(configText);
+
+            if (!configJson.name) return setError('config.json 缺少 "name" 字段');
+            if (configJson.name !== templateName) {
+                return setError(`名称不一致：config.json 中的 name (${configJson.name}) 与输入框中的名称 (${templateName}) 不匹配`);
+            }
+            if (!configJson.title) return setError('config.json 缺少 "title" (中文名) 字段');
+            if (!configJson.fields || !Array.isArray(configJson.fields)) {
+                return setError('config.json 缺少 "fields" 数组');
+            }
+        } catch (err) {
+            return setError('config.json 格式错误：请检查是否为有效的 JSON 文件');
+        }
 
         // Save key for future convenience
         localStorage.setItem('rs_admin_key', adminKey);
