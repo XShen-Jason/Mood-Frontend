@@ -51,13 +51,13 @@ function TemplateCard({ t }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <p className="tmpl-card__title">📦 {t.title || t.name}</p>
                     <div style={{ display: 'flex', gap: '4px' }}>
-                        {t.tier === 'free' ? (
-                            <span style={{ background: '#ecfdf5', color: '#059669', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '4px', fontWeight: 800, border: '1px solid #10b981' }}>
-                                免费
-                            </span>
-                        ) : (
+                        {t.tier === 'pro' ? (
                             <span style={{ background: '#fff1f2', color: '#e11d48', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '4px', fontWeight: 800, border: '1px solid #fb7185' }}>
                                 PRO
+                            </span>
+                        ) : (
+                            <span style={{ background: '#ecfdf5', color: '#059669', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '4px', fontWeight: 800, border: '1px solid #10b981' }}>
+                                免费
                             </span>
                         )}
                     </div>
