@@ -41,7 +41,7 @@ export default function Admin() {
             } catch (e) { /* invalid format */ }
         }
 
-        const fetchTiers = async () => {
+        const fetchTiersConfig = async () => {
             // Priority: Local Storage (Fast) -> API (Fresh)
             const cached = localStorage.getItem('rs_tiers_config');
             if (cached) {
