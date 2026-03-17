@@ -23,9 +23,6 @@ export default function MySpace() {
     const [loadingStatus, setLoadingStatus] = useState(true);
     const [inviteCount, setInviteCount] = useState(0);
 
-    const VERSION = '1.0.2-debug';
-    console.log('[MySpace] Rendered', { VERSION, userId: user?.id, loading });
-
     // Guard: redirect to auth if not logged in
     useEffect(() => {
         if (!loading && !user) navigate('/auth', { replace: true });
@@ -70,9 +67,6 @@ export default function MySpace() {
             .then(res => {
                 if (res.success) {
                     setStatus(res.data);
-                    if (res._debug) {
-                        console.log('[Quota Debug]', res._debug);
-                    }
                 }
             })
             .catch(err => console.error('[Quota Fetch Error]', err))
