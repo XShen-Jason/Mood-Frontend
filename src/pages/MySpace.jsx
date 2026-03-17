@@ -65,7 +65,12 @@ export default function MySpace() {
         if (!user) return;
         getUserStatus(user.id)
             .then(res => {
-                if (res.success) setStatus(res.data);
+                if (res.success) {
+                    setStatus(res.data);
+                    if (res._debug) {
+                        console.log('[Quota Debug]', res._debug);
+                    }
+                }
             })
             .catch(err => console.error('[Quota Fetch Error]', err))
             .finally(() => setLoadingStatus(false));
