@@ -20,6 +20,7 @@ export default function Admin() {
     const [files, setFiles] = useState([]);
     const [detectedTitle, setDetectedTitle] = useState('');
     const [existingTemplates, setExistingTemplates] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const [loadingTemplates, setLoadingTemplates] = useState(false);
     const [loadingUpload, setLoadingUpload] = useState(false);
@@ -393,11 +394,11 @@ export default function Admin() {
                     />
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                     <button onClick={handleSync} className="btn btn--sm" disabled={loadingSync} style={{ background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' }}>
-                        {loadingSync ? '同步中...' : '🔄 全量同步代码'}
+                     <button onClick={handleSync} className="btn btn--sm" disabled={loadingSync} style={{ background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' }} title="将 GitHub 仓库的最新的代码同步到 R2 存储">
+                        {loadingSync ? '同步中...' : '🔄 同步仓库代码'}
                     </button>
-                    <button onClick={handleCheckSync} className="btn btn--sm" disabled={loadingCheck} style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }}>
-                        {loadingCheck ? '核对中...' : '🔍 配置漂移校验'}
+                    <button onClick={handleCheckSync} className="btn btn--sm" disabled={loadingCheck} style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }} title="核对云端 KV 与本地内存的数据一致性">
+                        {loadingCheck ? '核对化...' : '🔍 配置一致性校验'}
                     </button>
                 </div>
             </div>
@@ -470,48 +471,65 @@ export default function Admin() {
                                 <button type="submit" className="btn btn--primary" style={{ width: '100%', marginTop: '10px' }} disabled={loadingUpload}>
                                     {loadingUpload ? '发版中...' : '确认发布 / 覆盖更新'}
                                 </button>
+                                <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '10px', textAlign: 'center' }}>
+                                    💡 提示：请选择包含 index.html 和 config.json 的<b>文件夹</b>或<b>多个文件</b>进行上传。
+                                </p>
                                 {msg.upload.error && <div className="alert alert--error" style={{ marginTop: '15px' }}>{msg.upload.error}</div>}
                                 {msg.upload.success && <div className="alert alert--success" style={{ marginTop: '15px' }}>{msg.upload.success}</div>}
                             </form>
                         </div>
 
-                        {/* Polished Template Table */}
+                        {/* Existing Templates List */}
                         <div className="builder-card">
-                            <h3 style={{ fontSize: '1.2rem', marginBottom: '20px', color: '#333' }}>📋 活跃模板库 ({existingTemplates.length})</h3>
-                            {loadingTemplates ? (
-                                <p style={{ color: '#999' }}>加载中...</p>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                <h3 style={{ fontSize: '1.2rem', margin: 0, color: '#333' }}>📋 活跃模板库 ({existingTemplates.length})</h3>
+                                <input 
+                                    type="text" 
+                                    placeholder="搜索 ID 或名称..." 
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    style={{ margin: 0, padding: '5px 10px', width: '180px', fontSize: '0.85rem' }}
+                                />
+                            </div>
+                            {existingTemplates.length === 0 ? (
+                                <p style={{ textAlign: 'center', color: '#666' }}>暂无模板</p>
                             ) : (
-                                <div style={{ overflowX: 'auto' }}>
+                                <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
                                     <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                                         <thead>
-                                            <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
-                                                <th style={{ padding: '12px 8px', color: '#64748b', fontSize: '0.85rem' }}>唯一标识</th>
-                                                <th style={{ padding: '12px 8px', color: '#64748b', fontSize: '0.85rem' }}>中文名称</th>
-                                                <th style={{ padding: '12px 8px', color: '#64748b', fontSize: '0.85rem', textAlign: 'right' }}>操作</th>
+                                            <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                                <th style={{ padding: '8px', textAlign: 'left', color: '#64748b', fontSize: '0.8rem' }}>ID</th>
+                                                <th style={{ padding: '8px', textAlign: 'left', color: '#64748b', fontSize: '0.8rem' }}>名称</th>
+                                                <th style={{ padding: '8px', textAlign: 'right', color: '#64748b', fontSize: '0.8rem' }}>操作</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {existingTemplates.map(tmpl => (
-                                                <tr key={tmpl.name} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                                    <td style={{ padding: '12px 8px', fontFamily: 'monospace', fontWeight: 600 }}>{tmpl.name}</td>
-                                                    <td style={{ padding: '12px 8px', color: '#334155' }}>{tmpl.title}</td>
-                                                    <td style={{ padding: '12px 8px', textAlign: 'right' }}>
-                                                        <button 
-                                                            onClick={() => handleDeleteTemplate(tmpl.name)}
-                                                            className="btn btn--sm" 
-                                                            disabled={loadingDelete === tmpl.name}
-                                                            style={{ 
-                                                                background: '#fef2f2', 
-                                                                color: '#dc2626', 
-                                                                border: '1px solid #fee2e2',
-                                                                padding: '4px 10px'
-                                                            }}
-                                                        >
-                                                            {loadingDelete === tmpl.name ? '...' : '删除'}
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {existingTemplates
+                                                .filter(t => 
+                                                    t.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                                    (t.title && t.title.toLowerCase().includes(searchQuery.toLowerCase()))
+                                                )
+                                                .map(tmpl => (
+                                                    <tr key={tmpl.name} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                                        <td style={{ padding: '12px 8px', fontFamily: 'monospace', fontWeight: 600 }}>{tmpl.name}</td>
+                                                        <td style={{ padding: '12px 8px', color: '#334155' }}>{tmpl.title}</td>
+                                                        <td style={{ padding: '12px 8px', textAlign: 'right' }}>
+                                                            <button 
+                                                                onClick={() => handleDeleteTemplate(tmpl.name)}
+                                                                className="btn btn--sm" 
+                                                                disabled={loadingDelete === tmpl.name}
+                                                                style={{ 
+                                                                    background: '#fef2f2', 
+                                                                    color: '#dc2626', 
+                                                                    border: '1px solid #fee2e2',
+                                                                    padding: '4px 10px'
+                                                                }}
+                                                            >
+                                                                {loadingDelete === tmpl.name ? '...' : '删除'}
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
                                         </tbody>
                                     </table>
                                 </div>
@@ -563,13 +581,13 @@ export default function Admin() {
                         <div className="builder-card">
                             <h3 style={{ fontSize: '1.2rem', marginBottom: '20px' }}>⚡ 边缘计算与清理</h3>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                <button className="btn" onClick={() => handleRefreshKV('quotas')} disabled={loadingQuotas} style={{ flexDirection: 'column', padding: '20px', height: 'auto', background: syncWarnings.quotas ? '#fff7ed' : '#f8fafc', border: syncWarnings.quotas ? '1px solid #fdba74' : '1px solid #e2e8f0' }}>
+                                <button className="btn" onClick={() => handleRefreshKV('quotas')} disabled={loadingQuotas} style={{ flexDirection: 'column', padding: '20px', height: 'auto', background: syncWarnings.quotas ? '#fff7ed' : '#f8fafc', border: syncWarnings.quotas ? '1px solid #fdba74' : '1px solid #e2e8f0' }} title="将最新的会员等级数据推送到云端 KV 缓存">
                                     <span style={{ fontSize: '1.4rem' }}>💎</span>
-                                    <span style={{ marginTop: '5px' }}>刷新会员配额</span>
+                                    <span style={{ marginTop: '5px' }}>同步等级数据</span>
                                 </button>
-                                <button className="btn" onClick={() => handleRefreshKV('blocklist')} disabled={loadingBlocklist} style={{ flexDirection: 'column', padding: '20px', height: 'auto', background: syncWarnings.blocklist ? '#fff7ed' : '#f8fafc', border: syncWarnings.blocklist ? '1px solid #fdba74' : '1px solid #e2e8f0' }}>
+                                <button className="btn" onClick={() => handleRefreshKV('blocklist')} disabled={loadingBlocklist} style={{ flexDirection: 'column', padding: '20px', height: 'auto', background: syncWarnings.blocklist ? '#fff7ed' : '#f8fafc', border: syncWarnings.blocklist ? '1px solid #fdba74' : '1px solid #e2e8f0' }} title="将最新的域名黑名单推送到云端 KV 缓存">
                                     <span style={{ fontSize: '1.4rem' }}>🚫</span>
-                                    <span style={{ marginTop: '5px' }}>刷新域名黑名单</span>
+                                    <span style={{ marginTop: '5px' }}>同步黑名单数据</span>
                                 </button>
                             </div>
                             <button 
