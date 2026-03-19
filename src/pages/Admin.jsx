@@ -378,7 +378,7 @@ export default function Admin() {
         <div className="page container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '30px' }}>
                 <h1 className="section-title">🛡️ 管理控制台</h1>
-                <p className="section-sub">RomanceSpace 核心引擎调度与资源管理</p>
+                <p className="section-sub">{import.meta.env.VITE_APP_NAME ?? 'Emotional Space'} 核心引擎调度与资源管理</p>
             </div>
 
             {/* Admin Key Global Input */}

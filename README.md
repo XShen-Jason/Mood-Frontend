@@ -1,4 +1,4 @@
-# RomanceSpace Frontend
+# Emotional Space Frontend
 
 The user-facing web application for browsing templates and building personalized romantic pages.
 

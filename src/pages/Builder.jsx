@@ -131,7 +131,8 @@ export default function Builder() {
         }
 
         const apiBase = import.meta.env.VITE_API_BASE_URL ?? '';
-        fetch(`${apiBase}/api/template/raw/${selectedTemplate.name}`)
+        const versionParam = selectedTemplate.version ? `?v=${selectedTemplate.version}` : '';
+        fetch(`${apiBase}/api/template/raw/${selectedTemplate.name}${versionParam}`)
             .then(res => {
                 if (!res.ok) throw new Error('Failed to fetch raw template');
                 return res.text();
