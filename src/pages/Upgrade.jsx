@@ -180,10 +180,20 @@ export default function Upgrade() {
                                 </div>
                                 <div style={{ fontSize: '3rem', fontWeight: 800, color: '#1e293b' }}>
                                     <span style={{ fontSize: '1.5rem' }}>¥</span>
-                                    {c.is_renewal ? (c.renewal_price / 100).toFixed(2) : (c.first_month_price / 100).toFixed(2)}
+                                    {c.is_renewal 
+                                        ? (c.renewal_price / 100).toFixed(2) 
+                                        : (c.is_returning 
+                                            ? (c.base_price / 100).toFixed(2) 
+                                            : (c.first_month_price / 100).toFixed(2))
+                                    }
                                 </div>
                                 <div style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '8px' }}>
-                                    {c.is_renewal ? '您的专享续费价' : `次月起续费 ¥${(c.renewal_price / 100).toFixed(2)}/月`}
+                                    {c.is_renewal 
+                                        ? '您的专享续费价' 
+                                        : (c.is_returning 
+                                            ? '标准资费' 
+                                            : `首月优惠 (次月起 ¥${(c.renewal_price / 100).toFixed(2)}/月)`)
+                                    }
                                 </div>
                             </div>
                             
