@@ -177,9 +177,86 @@ export default function Upgrade() {
             
             {/* --- Pricing Grid --- */}
             <div style={{ 
-                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
                 gap: '30px', alignItems: 'stretch'
             }}>
+                {/* Free Tier (Static Comparison) */}
+                <div style={{
+                    border: '2px solid #e2e8f0', 
+                    borderRadius: '32px', 
+                    padding: '50px 40px',
+                    background: '#fff', 
+                    textAlign: 'center', 
+                    boxShadow: '0 10px 20px rgba(0,0,0,0.02)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transition: 'all 0.4s ease'
+                }}>
+                    <div style={{ marginBottom: '20px' }}>
+                        <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1e293b', marginBottom: '8px' }}>
+                            体验用户
+                        </h2>
+                        <p style={{ color: '#64748b', fontSize: '0.95rem', fontWeight: 500 }}>
+                            基础功能 · 永久免费
+                        </p>
+                    </div>
+                    
+                    <div style={{ margin: '40px 0', borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', padding: '30px 0' }}>
+                        <div style={{ fontSize: '4.2rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-2px' }}>
+                            <span style={{ fontSize: '1.8rem', verticalAlign: 'top', marginTop: '15px', display: 'inline-block' }}>¥</span>
+                            0
+                        </div>
+                        <div style={{ 
+                            display: 'inline-block', padding: '4px 12px', borderRadius: '8px',
+                            background: '#f1f5f9', color: '#64748b', fontSize: '0.85rem', fontWeight: 700, marginTop: '10px'
+                        }}>
+                            无需支付，立即开始
+                        </div>
+                    </div>
+                    
+                    <div style={{ textAlign: 'left', marginBottom: '40px', flex: 1 }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1e293b', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            基础权限:
+                        </div>
+                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '1rem', color: '#475569' }}>
+                            {[
+                                { l: '精选免费模板库', p: true },
+                                { l: '1 个专属域名配额', p: true },
+                                { l: '每日 5 次修改限制', p: true },
+                                { l: '标准 CDN 加载速度', p: true },
+                                { l: '支持 480+ BGM 库', p: true },
+                                { l: '移除底部版权标识', p: false },
+                                { l: '高级粒子特效定制', p: false },
+                            ].map((item, i) => (
+                                <li key={i} style={{ 
+                                    marginBottom: '14px', display: 'flex', alignItems: 'flex-start', gap: '12px',
+                                    opacity: item.p ? 1 : 0.35
+                                }}>
+                                    <span style={{ 
+                                        width: '20px', height: '20px', borderRadius: '50%',
+                                        background: item.p ? '#94a3b8' : '#cbd5e1',
+                                        color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontSize: '10px', marginTop: '4px', flexShrink: 0
+                                    }}>{item.p ? '✓' : '✕'}</span>
+                                    <span style={{ textDecoration: item.p ? 'none' : 'line-through' }}>{item.l}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    <button 
+                        onClick={() => navigate('/builder')}
+                        style={{ 
+                            width: '100%', padding: '20px', borderRadius: '20px', 
+                            fontSize: '1.2rem', fontWeight: 800, transition: 'all 0.3s ease',
+                            background: '#f1f5f9', color: '#64748b', border: 'none',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        免费开始制作
+                    </button>
+                </div>
+
                 {configs.map(c => {
                     const isPro = c.tier === 'pro';
                     const isPartner = c.tier === 'partner';

@@ -27,6 +27,7 @@ export default function Auth() {
     
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [nickname, setNickname] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [inviteCode, setInviteCode] = useState('');
     
@@ -124,7 +125,10 @@ export default function Auth() {
 
         if (data.user) {
             const myCode = data.user.id.slice(0, 8).toUpperCase();
-            await supabase.from('profiles').update({ invite_code: myCode }).eq('id', data.user.id);
+            const updatePayload = { invite_code: myCode };
+            if (nickname) updatePayload.display_name = nickname;
+            
+            await supabase.from('profiles').update(updatePayload).eq('id', data.user.id);
         }
 
         toast.success('注册成功！请查收验证邮件后登录。');
@@ -262,6 +266,12 @@ export default function Auth() {
                 {/* ── Register Form ── */}
                 {tab === 'register' && (
                     <form onSubmit={handleRegister} id="form-register">
+                        <div className="form-group">
+                            <label htmlFor="reg-nickname">昵称</label>
+                            <input id="reg-nickname" type="text" value={nickname}
+                                onChange={e => setNickname(e.target.value)}
+                                placeholder="怎么称呼你呢？" required />
+                        </div>
                         <div className="form-group">
                             <label htmlFor="reg-email">邮箱</label>
                             <input id="reg-email" type="email" value={email}

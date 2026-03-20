@@ -75,13 +75,6 @@ function Navbar() {
                                     管理
                                 </NavLink>
                             )}
-                            <button
-                                id="nav-signout"
-                                onClick={handleSignOut}
-                                className="navbar__btn-link"
-                            >
-                                退出
-                            </button>
                         </>
                     ) : (
                         <NavLink to="/auth" className={({ isActive }) => isActive ? 'active' : ''} id="nav-login">

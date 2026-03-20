@@ -22,6 +22,8 @@ export default function MySpace() {
     });
     const [loadingStatus, setLoadingStatus] = useState(true);
     const [inviteCount, setInviteCount] = useState(0);
+    const [isEditingNickname, setIsEditingNickname] = useState(false);
+    const [newNickname, setNewNickname] = useState('');
 
     // Guard: redirect to auth if not logged in
     useEffect(() => {
@@ -100,6 +102,21 @@ export default function MySpace() {
         setGeneratingCode(false);
     }
 
+    async function handleUpdateNickname() {
+        if (!newNickname.trim()) return setIsEditingNickname(false);
+        const { error } = await supabase
+            .from('profiles')
+            .update({ display_name: newNickname.trim() })
+            .eq('id', user.id);
+        
+        if (error) {
+            toast.error('修改失败：' + error.message);
+        } else {
+            toast.success('昵称已更新');
+            setIsEditingNickname(false);
+        }
+    }
+
     if (loading || !user) {
         return (
             <div className="spinner-wrap">
@@ -121,8 +138,35 @@ export default function MySpace() {
                     {profile?.display_name?.[0]?.toUpperCase() ?? user.email[0].toUpperCase()}
                 </div>
                 <div className="myspace-profile-info">
-                    <div className="myspace-username">
-                        {profile?.display_name || '探索者'}
+                    <div className="myspace-username" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {isEditingNickname ? (
+                            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                <input 
+                                    className="input" 
+                                    style={{ padding: '4px 8px', fontSize: '1rem', width: '120px' }}
+                                    value={newNickname}
+                                    onChange={e => setNewNickname(e.target.value)}
+                                    placeholder="新昵称"
+                                    autoFocus
+                                />
+                                <button className="btn btn--sm btn--primary" onClick={handleUpdateNickname}>保存</button>
+                                <button className="btn btn--sm btn--outline" onClick={() => setIsEditingNickname(false)}>取消</button>
+                            </div>
+                        ) : (
+                            <>
+                                {profile?.display_name || '探索者'}
+                                <button 
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', opacity: 0.6 }}
+                                    onClick={() => {
+                                        setNewNickname(profile?.display_name || '');
+                                        setIsEditingNickname(true);
+                                    }}
+                                    title="修改昵称"
+                                >
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                </button>
+                            </>
+                        )}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                         <span className="badge" style={{ 
@@ -157,38 +201,44 @@ export default function MySpace() {
                     </div>
                     
                     {!loadingStatus && (
-                        <div className="myspace-quota-section-compact" style={{ marginTop: '0.5rem', display: 'flex', gap: '1rem' }}>
-                            {/* Domain Quota */}
-                            <div className="quota-group-mini" style={{ flex: 1 }}>
-                                <div className="quota-label-mini" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '2px', color: '#64748b' }}>
-                                    <span>网页额度: {status.count}/{status.maxDomains}</span>
+                        <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem' }}>
+                            {/* Domain Quota Card */}
+                            <div style={{ 
+                                flex: 1, 
+                                background: '#f8fafc', 
+                                padding: '12px', 
+                                borderRadius: '12px', 
+                                border: '1px solid #f1f5f9',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '4px'
+                            }}>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>网页额度</div>
+                                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b' }}>
+                                    {status.count} <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500 }}>/ {status.maxDomains}</span>
                                 </div>
-                                <div className="quota-bar-bg-mini" style={{ height: '4px', background: '#f1f5f9', borderRadius: '2px', overflow: 'hidden' }}>
-                                    <div 
-                                        className="quota-bar-fill" 
-                                        style={{ 
-                                            height: '100%', 
-                                            background: 'linear-gradient(90deg, #6366f1, #8b5cf6)', 
-                                            width: `${Math.min(100, (status.count / status.maxDomains) * 100)}%` 
-                                        }} 
-                                    />
+                                <div style={{ height: '4px', background: '#e2e8f0', borderRadius: '2px', overflow: 'hidden', marginTop: '4px' }}>
+                                    <div style={{ height: '100%', background: 'linear-gradient(90deg, #6366f1, #8b5cf6)', width: `${Math.min(100, (status.count / status.maxDomains) * 100)}%` }} />
                                 </div>
                             </div>
 
-                            {/* Daily Edit Quota */}
-                            <div className="quota-group-mini" style={{ flex: 1 }}>
-                                <div className="quota-label-mini" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '2px', color: '#64748b' }}>
-                                    <span>今日修改: {status.dailyUsedEdits}/{status.maxDailyEdits}</span>
+                            {/* Daily Edit Quota Card */}
+                            <div style={{ 
+                                flex: 1, 
+                                background: '#f8fafc', 
+                                padding: '12px', 
+                                borderRadius: '12px', 
+                                border: '1px solid #f1f5f9',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '4px'
+                            }}>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>今日修改</div>
+                                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b' }}>
+                                    {status.dailyUsedEdits} <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500 }}>/ {status.maxDailyEdits}</span>
                                 </div>
-                                <div className="quota-bar-bg-mini" style={{ height: '4px', background: '#f1f5f9', borderRadius: '2px', overflow: 'hidden' }}>
-                                    <div 
-                                        className="quota-bar-fill" 
-                                        style={{ 
-                                            height: '100%', 
-                                            background: 'linear-gradient(90deg, var(--pink), #f472b6)', 
-                                            width: `${Math.min(100, (status.dailyUsedEdits / status.maxDailyEdits) * 100)}%` 
-                                        }} 
-                                    />
+                                <div style={{ height: '4px', background: '#e2e8f0', borderRadius: '2px', overflow: 'hidden', marginTop: '4px' }}>
+                                    <div style={{ height: '100%', background: 'linear-gradient(90deg, var(--pink), #f472b6)', width: `${Math.min(100, (status.dailyUsedEdits / status.maxDailyEdits) * 100)}%` }} />
                                 </div>
                             </div>
                         </div>
