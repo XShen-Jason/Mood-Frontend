@@ -121,12 +121,40 @@ export default function MySpace() {
                     {profile?.display_name?.[0]?.toUpperCase() ?? user.email[0].toUpperCase()}
                 </div>
                 <div className="myspace-profile-info">
-                    <h1 className="myspace-username">
-                        {profile?.display_name ?? profile?.username ?? user.email}
-                    </h1>
-                    <span className="myspace-tier" style={{ color: 'var(--muted)' }}>
-                        {status.label || '🌟 体验用户'}
-                    </span>
+                    <div className="myspace-username">
+                        {profile?.display_name || '探索者'}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span className="badge" style={{ 
+                            background: profile?.tier === 'pro' ? 'linear-gradient(135deg, #f43f5e, #e11d48)' : 
+                                        profile?.tier === 'partner' ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : '#f0e6ee',
+                            color: (profile?.tier === 'pro' || profile?.tier === 'partner') ? '#fff' : 'var(--pink)',
+                            border: 'none'
+                        }}>
+                            {profile?.tier?.toUpperCase() || 'FREE'}
+                        </span>
+                        {profile?.subscription_expires_at && (
+                            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                {new Date(profile.subscription_expires_at) > new Date() ? '有效期至：' : '已于 '}
+                                {new Date(profile.subscription_expires_at).toLocaleDateString()}
+                                {new Date(profile.subscription_expires_at) < new Date() && ' 到期'}
+                            </span>
+                        )}
+                        <NavLink 
+                            to="/upgrade" 
+                            className="btn btn--sm" 
+                            style={{ 
+                                padding: '4px 12px', 
+                                fontSize: '0.75rem', 
+                                background: 'var(--pink-light)', 
+                                color: 'var(--pink)',
+                                border: '1px solid var(--pink)',
+                                marginLeft: '4px'
+                            }}
+                        >
+                            {profile?.tier === 'free' || !profile?.tier ? '🚀 升级特权' : '💎 立即续费'}
+                        </NavLink>
+                    </div>
                     
                     {!loadingStatus && (
                         <div className="myspace-quota-section-compact" style={{ marginTop: '0.5rem', display: 'flex', gap: '1rem' }}>

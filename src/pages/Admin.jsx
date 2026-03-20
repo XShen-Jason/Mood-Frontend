@@ -828,7 +828,7 @@ export default function Admin() {
                                 <div style={{ background: '#f8fafc', borderRadius: '10px', padding: '14px', marginBottom: '16px' }}>
                                     <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', marginBottom: '10px', letterSpacing: '0.05em' }}>PLAN ID</div>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                        <div className="form-group" style={{ margin: 0 }}>
+                                        <div className="form-group" style={{ margin: 0, minWidth: 0 }}>
                                             <label style={{ fontSize: '0.8rem' }}>会员等级</label>
                                             <select value={pricingForm.tier} onChange={e => setPricingForm({...pricingForm, tier: e.target.value})}>
                                                 <option value="pro">Pro 专业版</option>
@@ -836,7 +836,7 @@ export default function Admin() {
                                                 <option value="lifetime">Lifetime 终身</option>
                                             </select>
                                         </div>
-                                        <div className="form-group" style={{ margin: 0 }}>
+                                        <div className="form-group" style={{ margin: 0, minWidth: 0 }}>
                                             <label style={{ fontSize: '0.8rem' }}>排序权重</label>
                                             <input
                                                 type="text"
@@ -895,7 +895,7 @@ export default function Admin() {
                                 <div style={{ background: '#f8fafc', borderRadius: '10px', padding: '14px', marginBottom: '16px' }}>
                                     <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', marginBottom: '10px', letterSpacing: '0.05em' }}>价格配置（单位：元）</div>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                        <div className="form-group" style={{ margin: 0 }}>
+                                        <div className="form-group" style={{ margin: 0, minWidth: 0 }}>
                                             <label style={{ fontSize: '0.8rem' }}>有效时长（月）</label>
                                             <input
                                                 type="text"
@@ -905,7 +905,7 @@ export default function Admin() {
                                                 placeholder="1"
                                             />
                                         </div>
-                                        <div className="form-group" style={{ margin: 0 }}>
+                                        <div className="form-group" style={{ margin: 0, minWidth: 0 }}>
                                             <label style={{ fontSize: '0.8rem' }}>划线原价 ¥（必填）</label>
                                             <input
                                                 type="text"

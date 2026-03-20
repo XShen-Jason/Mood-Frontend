@@ -134,52 +134,110 @@ export default function Upgrade() {
 
     // Render Pricing View
     return (
-        <div className="page-container" style={{ maxWidth: '1000px', margin: '0 auto', padding: '60px 20px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-                <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#1e293b', marginBottom: '16px' }}>解锁全部特权 💎</h1>
-                <p style={{ fontSize: '1.1rem', color: '#64748b' }}>一次订阅，畅享情感空间的无限可能</p>
+        <div className="page-container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '60px 20px' }}>
+            {/* --- Hero Section --- */}
+            <div style={{ textAlign: 'center', marginBottom: '80px' }}>
+                <div style={{ 
+                    display: 'inline-block', padding: '10px 24px', borderRadius: '100px', 
+                    background: 'var(--pink-light)', color: 'var(--pink)', 
+                    fontSize: '0.9rem', fontWeight: 800, marginBottom: '20px',
+                    boxShadow: '0 4px 15px rgba(214, 51, 108, 0.1)'
+                }}>
+                    ✨ 开启您的专属浪漫空间
+                </div>
+                <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3.2rem)', fontWeight: 900, color: '#1e293b', marginBottom: '20px', letterSpacing: '-1px' }}>
+                    选择最适合您的 <span style={{ color: 'var(--pink)', background: 'linear-gradient(120deg, #fce7f3 0%, #fce7f3 100%)', backgroundRepeat: 'no-repeat', backgroundSize: '100% 0.3em', backgroundPosition: '0 0.8em' }}>特权等级</span>
+                </h1>
+                <p style={{ fontSize: '1.2rem', color: '#64748b', maxWidth: '600px', margin: '0 auto', lineHeight: 1.6 }}>
+                    加入 Pro 会员或合伙人计划，解锁无限创意模板与专属自定义功能，让每一个浪漫时刻都值得被永久铭记。
+                </p>
+            </div>
+
+            {/* --- Benefit Highlights --- */}
+            <div style={{ 
+                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
+                gap: '24px', marginBottom: '80px' 
+            }}>
+                {[
+                    { icon: '🎨', title: '无限模板', desc: '解锁全场 100+ 精致浪漫模板，支持一键无感切换。' },
+                    { icon: '⚡', title: '极速加载', desc: '独家 CDN 加速，无论是图片还是 4K 视频均可秒开。' },
+                    { icon: '🔗', title: '专属域名', desc: '拥有自定义二级域名，甚至可以绑定您的独立域名。' },
+                    { icon: '💎', title: '尊贵标识', desc: '全平台尊贵会员标识，头像框及个人主页深度定制。' },
+                ].map((b, idx) => (
+                    <div key={idx} style={{ 
+                        background: '#fff', padding: '30px', borderRadius: '24px', 
+                        border: '1px solid #f1f5f9', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' 
+                    }}>
+                        <div style={{ fontSize: '2.5rem', marginBottom: '15px' }}>{b.icon}</div>
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '10px', color: '#1e293b' }}>{b.title}</h3>
+                        <p style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: 1.6 }}>{b.desc}</p>
+                    </div>
+                ))}
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '30px' }}>
+            {/* --- Pricing Grid --- */}
+            <div style={{ 
+                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+                gap: '30px', alignItems: 'stretch'
+            }}>
                 {configs.map(c => {
                     const isPro = c.tier === 'pro';
+                    const isPartner = c.tier === 'partner';
+                    const isLifetime = c.tier === 'lifetime';
+
+                    // Color Schemes
+                    const themeColor = isPro ? 'var(--pink)' : isPartner ? '#7c3aed' : '#0f172a';
+                    const themeBg = isPro ? '#fff1f2' : isPartner ? '#f5f3ff' : '#f8fafc';
+
                     return (
                         <div key={c.id} style={{
-                            border: isPro ? '2px solid var(--pink)' : '1px solid #e2e8f0', 
-                            borderRadius: '24px', 
-                            padding: '40px 30px',
+                            border: `2px solid ${isPro ? themeColor : '#e2e8f0'}`, 
+                            borderRadius: '32px', 
+                            padding: '50px 40px',
                             background: '#fff', 
                             textAlign: 'center', 
-                            boxShadow: isPro ? 'var(--shadow-lg)' : '0 10px 20px rgba(0,0,0,0.02)',
+                            boxShadow: isPro ? '0 25px 50px -12px rgba(214, 51, 108, 0.15)' : '0 10px 20px rgba(0,0,0,0.02)',
                             position: 'relative',
-                            transition: 'transform 0.3s ease',
-                            cursor: 'pointer'
+                            transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                            display: 'flex',
+                            flexDirection: 'column'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-10px) scale(1.02)';
+                            if (isPro) e.currentTarget.style.boxShadow = '0 30px 60px -12px rgba(214, 51, 108, 0.25)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                            if (isPro) e.currentTarget.style.boxShadow = '0 25px 50px -12px rgba(214, 51, 108, 0.15)';
+                        }}
                         >
                             {c.discount_label && (
                                 <div style={{
-                                    position: 'absolute', top: '20px', right: '20px',
-                                    background: 'linear-gradient(135deg, #f43f5e, #e11d48)',
-                                    color: '#fff', padding: '4px 12px', borderRadius: '20px',
-                                    fontSize: '0.75rem', fontWeight: 800, boxShadow: '0 4px 10px rgba(225, 29, 72, 0.3)'
+                                    position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)',
+                                    background: isPro ? 'linear-gradient(135deg, #f43f5e, #e11d48)' : 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                                    color: '#fff', padding: '6px 20px', borderRadius: '30px',
+                                    fontSize: '0.8rem', fontWeight: 900, boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+                                    whiteSpace: 'nowrap'
                                 }}>
-                                    {c.discount_label}
+                                    🔥 {c.discount_label}
                                 </div>
                             )}
                             
-                            <h2 style={{ fontSize: '1.5rem', color: '#1e293b', marginBottom: '8px' }}>{c.display_name || c.tier.toUpperCase()}</h2>
-                            <p style={{ color: '#64748b', marginBottom: '30px', fontSize: '0.9rem' }}>
-                                有效期 {c.duration_months} 个月
-                            </p>
+                            <div style={{ marginBottom: '20px' }}>
+                                <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1e293b', marginBottom: '8px' }}>
+                                    {c.display_name || c.tier.toUpperCase()}
+                                </h2>
+                                <p style={{ color: '#64748b', fontSize: '0.95rem', fontWeight: 500 }}>
+                                    全项权益 · {c.duration_months} 个月有效期
+                                </p>
+                            </div>
                             
-                            <div style={{ marginBottom: '30px' }}>
-                                <div style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '1rem', marginBottom: '4px' }}>
+                            <div style={{ margin: '40px 0', borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', padding: '30px 0' }}>
+                                <div style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '1.1rem', marginBottom: '5px' }}>
                                     ¥ {(c.base_price / 100).toFixed(2)}
                                 </div>
-                                <div style={{ fontSize: '3rem', fontWeight: 800, color: '#1e293b' }}>
-                                    <span style={{ fontSize: '1.5rem' }}>¥</span>
+                                <div style={{ fontSize: '4.2rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-2px' }}>
+                                    <span style={{ fontSize: '1.8rem', verticalAlign: 'top', marginTop: '15px', display: 'inline-block' }}>¥</span>
                                     {c.is_renewal 
                                         ? (c.renewal_price / 100).toFixed(2) 
                                         : (c.is_returning 
@@ -187,56 +245,103 @@ export default function Upgrade() {
                                             : (c.first_month_price / 100).toFixed(2))
                                     }
                                 </div>
-                                <div style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '8px' }}>
+                                <div style={{ 
+                                    display: 'inline-block', padding: '4px 12px', borderRadius: '8px',
+                                    background: themeBg, color: themeColor, fontSize: '0.85rem', fontWeight: 700, marginTop: '10px'
+                                }}>
                                     {c.is_renewal 
-                                        ? '您的专享续费价' 
+                                        ? '您当前的续费特惠价' 
                                         : (c.is_returning 
-                                            ? '标准资费' 
-                                            : `首月优惠 (次月起 ¥${(c.renewal_price / 100).toFixed(2)}/月)`)
+                                            ? '当前等级标准价格' 
+                                            : `首月入坑价 (次月 ¥${(c.renewal_price / 100).toFixed(2)} 续费)`)
                                     }
                                 </div>
                             </div>
                             
-                            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 40px 0', textAlign: 'left', fontSize: '0.95rem', color: '#475569' }}>
-                                <li style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <span style={{ color: 'var(--pink)' }}>✓</span> 无限次模板切换
-                                </li>
-                                <li style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <span style={{ color: 'var(--pink)' }}>✓</span> 专属高级动态背景
-                                </li>
-                                <li style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <span style={{ color: 'var(--pink)' }}>✓</span> 背景音乐库全解锁
-                                </li>
-                                <li style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <span style={{ color: 'var(--pink)' }}>✓</span> 独立二级域名访问
-                                </li>
-                            </ul>
+                            <div style={{ textAlign: 'left', marginBottom: '40px', flex: 1 }}>
+                                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1e293b', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                    等级核心权益:
+                                </div>
+                                <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '1rem', color: '#475569' }}>
+                                    {[
+                                        { l: '100% 模板库自由切换', p: true },
+                                        { l: `${isPro ? '3' : isPartner ? '10' : '99'} 个域名配额`, p: true },
+                                        { l: '专属 7x24h 情感导师技术支持', p: isPartner || isLifetime },
+                                        { l: '全库 480+ 款无损 BGM 库', p: true },
+                                        { l: '动态粒子特效背景自由定制', p: true },
+                                        { l: '支持绑定个人顶级域名', p: isPartner || isLifetime },
+                                    ].map((item, i) => (
+                                        <li key={i} style={{ 
+                                            marginBottom: '14px', display: 'flex', alignItems: 'flex-start', gap: '12px',
+                                            opacity: item.p ? 1 : 0.35
+                                        }}>
+                                            <span style={{ 
+                                                width: '20px', height: '20px', borderRadius: '50%',
+                                                background: item.p ? themeColor : '#cbd5e1',
+                                                color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                fontSize: '10px', marginTop: '4px', flexShrink: 0
+                                            }}>{item.p ? '✓' : '✕'}</span>
+                                            <span style={{ textDecoration: item.p ? 'none' : 'line-through' }}>{item.l}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
 
                             <button 
                                 disabled={paying}
                                 onClick={() => handleCheckout(c, 'wechat')}
-                                className={isPro ? "btn btn--primary" : "btn btn--outline"}
                                 style={{ 
-                                    width: '100%', padding: '15px', borderRadius: '15px', 
-                                    fontSize: '1rem', fontWeight: 700, transition: 'all 0.2s ease'
+                                    width: '100%', padding: '20px', borderRadius: '20px', 
+                                    fontSize: '1.2rem', fontWeight: 800, transition: 'all 0.3s ease',
+                                    background: themeColor, color: '#fff', border: 'none',
+                                    cursor: 'pointer', boxShadow: `0 10px 25px -5px ${themeColor}66`
                                 }}
                             >
                                 {paying ? '正在唤起支付...' : (c.is_renewal ? '立即续费特权' : '立即开启特权')}
                             </button>
+                            <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '15px' }}>
+                                安全加密支付 · 权益秒到账
+                            </p>
                         </div>
                     );
                 })}
             </div>
             
-            {configs.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '80px', background: '#f8fafc', borderRadius: '24px', color: '#94a3b8' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '20px' }}>✨</div>
-                    <h3>套餐整理中，敬请期待...</h3>
+            {/* --- FAQ / Footer --- */}
+            <div style={{ marginTop: '100px', borderTop: '1px solid #e2e8f0', paddingTop: '60px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '60px', textAlign: 'left' }}>
+                    <div>
+                        <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1e293b', marginBottom: '25px' }}>常见问题解答</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+                            <div>
+                                <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>Q: 升级后原来的项目会丢失吗？</div>
+                                <div style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: 1.6 }}>绝对不会。升级只会增加您的创作上限并解锁新功能，原有内容将完美保留并支持直接升级至高级模板。</div>
+                            </div>
+                            <div>
+                                <div style={{ fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>Q: 支持哪些支付方式？</div>
+                                <div style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: 1.6 }}>目前全面支持微信支付。支付过程受商户网关加密保护，确保您的资金安全。</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1e293b', marginBottom: '25px' }}>VIP 专属服务</h4>
+                        <div style={{ background: '#f8fafc', padding: '30px', borderRadius: '24px', border: '1px dashed #cbd5e1' }}>
+                            <p style={{ fontSize: '0.95rem', color: '#475569', marginBottom: '15px', lineHeight: 1.6 }}>
+                                遇到支付问题、权益未即时到账或有定制化需求？请随时联系我们的 12h 快速响应客服：
+                            </p>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--pink)' }}>
+                                微信号: <span style={{ textDecoration: 'underline' }}>MoodSpaceSupport</span>
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '10px' }}>
+                                (服务时间: 10:00 - 22:00)
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            )}
+            </div>
 
-            <div style={{ marginTop: '60px', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
-                如有支付问题请联系客服微信号: MoodSpaceSupport
+            <div style={{ marginTop: '60px', textAlign: 'center', color: '#94a3b8', fontSize: '0.8rem' }}>
+                © 2026 RomanceSpace · 让浪漫不再有边界
             </div>
         </div>
     );

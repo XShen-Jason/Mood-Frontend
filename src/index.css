@@ -219,6 +219,7 @@ html {
 .form-group input,
 .form-group select,
 .form-group textarea {
+    width: 100%;
     padding: 0.7rem 1rem;
     border: 1.5px solid rgba(224, 208, 216, 0.6);
     border-radius: var(--radius-sm);
@@ -228,6 +229,7 @@ html {
     background: var(--white);
     color: var(--mid);
     outline: none;
+    display: block;
     -webkit-appearance: none;
     appearance: none; /* Modern look on mobile */
 }

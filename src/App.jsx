@@ -65,9 +65,6 @@ function Navbar() {
                     <NavLink to="/builder" className={({ isActive }) => isActive ? 'active' : ''}>
                         制作
                     </NavLink>
-                    <NavLink to="/upgrade" className={({ isActive }) => isActive ? 'active' : ''}>
-                        升级
-                    </NavLink>
                     {user ? (
                         <>
                             <NavLink to="/myspace" className={({ isActive }) => isActive ? 'active' : ''} id="nav-myspace">
