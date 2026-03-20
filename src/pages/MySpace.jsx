@@ -61,6 +61,7 @@ export default function MySpace() {
     }, [user]);
 
     // Load user quota status from backend
+    // L6.7 Sync status whenever profile tier or expiry changes (Realtime reactive)
     useEffect(() => {
         if (!user) return;
         getUserStatus(user.id)
@@ -71,7 +72,7 @@ export default function MySpace() {
             })
             .catch(err => console.error('[Quota Fetch Error]', err))
             .finally(() => setLoadingStatus(false));
-    }, [user]);
+    }, [user, profile?.tier, profile?.subscription_expires_at]);
 
     async function handleSignOut() {
         await signOut();
