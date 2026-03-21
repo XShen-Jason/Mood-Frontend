@@ -26,6 +26,7 @@ export default function MySpace() {
             label: '🌟 体验用户',
             dailyUsedEdits: 0,
             maxDailyEdits: 5,
+            inviteBonus: 0,
             bg: '#f0e6ee',
             color: 'var(--pink)'
         };
@@ -35,7 +36,8 @@ export default function MySpace() {
         setStatusState(newStatus);
         localStorage.setItem('rs_status', JSON.stringify(newStatus));
     };
-    const [loadingStatus, setLoadingStatus] = useState(true);
+    // loadingStatus = false if we have cached data (so quota cards render immediately)
+    const [loadingStatus, setLoadingStatus] = useState(() => !localStorage.getItem('rs_status'));
     const [inviteCount, setInviteCount] = useState(0);
     const [isEditingNickname, setIsEditingNickname] = useState(false);
     const [newNickname, setNewNickname] = useState('');
@@ -218,7 +220,7 @@ export default function MySpace() {
                         </NavLink>
                     </div>
                     
-                    {!loadingStatus && (
+                    {/* Quota Cards - always rendered, uses cached data while fetching */}
                         <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem' }}>
                             {/* Domain Quota Card */}
                             <div style={{ 
@@ -264,8 +266,7 @@ export default function MySpace() {
                                     <div style={{ height: '100%', background: 'linear-gradient(90deg, var(--pink), #f472b6)', width: `${Math.min(100, (status.dailyUsedEdits / status.maxDailyEdits) * 100)}%` }} />
                                 </div>
                             </div>
-                        </div>
-                    )}
+                    </div>
                 </div>
                 <button id="btn-signout" className="btn btn--outline btn--sm" onClick={handleSignOut}>
                     退出
