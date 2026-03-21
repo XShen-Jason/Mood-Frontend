@@ -362,7 +362,8 @@ export default function MySpace() {
                                     </a>
                                     <button 
                                         onClick={() => {
-                                            navigator.clipboard.writeText(pageUrl);
+                                            const url = `https://${p.subdomain}.${BASE_DOMAIN}`;
+                                            navigator.clipboard.writeText(url);
                                             toast.success('已复制网址到剪贴板！');
                                         }}
                                         className="btn btn--outline btn--sm"
