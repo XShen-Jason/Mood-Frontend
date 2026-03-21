@@ -201,7 +201,15 @@ export async function refreshGallery(adminKey) {
     });
 }
 
-// ── Payment & Pricing endpoints ──────────────────────────────────────────────
+/**
+ * Check if a custom domain is available (real-time debounce).
+ */
+export async function checkDomainAvailability(domain) {
+    if (!domain) return { available: false, message: '' };
+    return apiFetch(`/api/project/check-domain?domain=${encodeURIComponent(domain)}`);
+}
+
+/** Get all membership tiers and their configurations. */
 
 /** Get all pricing configurations — admin only for full list inclusive of inactive. */
 export async function listPricingAdmin(adminKey) {

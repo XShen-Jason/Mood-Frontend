@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { listTemplates, renderProject, getConfigBySubdomain, getUserStatus } from '../api/client.js';
+import { listTemplates, renderProject, getConfigBySubdomain, getUserStatus, checkDomainAvailability } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const BASE_DOMAIN = '885201314.xyz';
@@ -39,8 +39,49 @@ export default function Builder() {
 
     // BSR (Browser-Side Rendering) Raw HTML
     const [rawHtml, setRawHtml] = useState(null);
-
     const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+
+    // Domain Checker State
+    const [domainStatus, setDomainStatus] = useState('idle'); // idle, checking, available, taken, error
+    const [domainMsg, setDomainMsg] = useState('');
+
+    // 0. Domain Availability Checker (Debounced)
+    useEffect(() => {
+        if (editSubdomain || !subdomain) {
+            setDomainStatus('idle');
+            setDomainMsg('');
+            return;
+        }
+
+        const minLen = status?.minDomainLen ?? 3;
+        if (subdomain.length < minLen) {
+            setDomainStatus('error');
+            setDomainMsg(`⚠️ 域名太短，您的等级至少需要 ${minLen} 个字符`);
+            return;
+        }
+
+        setDomainStatus('checking');
+        setDomainMsg('正在实时检测可用性...');
+
+        const timer = setTimeout(() => {
+            checkDomainAvailability(subdomain)
+                .then(res => {
+                    if (res.available) {
+                        setDomainStatus('available');
+                        setDomainMsg(res.message);
+                    } else {
+                        setDomainStatus('taken');
+                        setDomainMsg(`❌ ${res.message}`);
+                    }
+                })
+                .catch(err => {
+                    setDomainStatus('error');
+                    setDomainMsg('⚠️ 检测网络异常，请重试');
+                });
+        }, 1000); // 1-second debounce
+
+        return () => clearTimeout(timer);
+    }, [subdomain, editSubdomain, status]);
 
     // 1. Persistence for referral code (Runs once)
     useEffect(() => {
@@ -318,10 +359,19 @@ export default function Builder() {
                                         />
                                         <span className="input-suffix">.{BASE_DOMAIN}</span>
                                     </div>
-                                    {!editSubdomain && subdomain && subdomain.length < (status?.minDomainLen ?? 3) && (
-                                        <p style={{ fontSize: '0.75rem', color: '#f87171', marginTop: '4px' }}>
-                                            ⚠️ 域名太短了，您的等级至少需要 {status?.minDomainLen ?? 3} 个字符
-                                        </p>
+                                    {!editSubdomain && domainStatus !== 'idle' && (
+                                        <div style={{
+                                            fontSize: '0.8rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            marginTop: '6px',
+                                            color: domainStatus === 'available' ? '#10b981' :
+                                                   domainStatus === 'checking' ? '#64748b' : '#ef4444'
+                                        }}>
+                                            {domainStatus === 'checking' && <div className="spinner" style={{ width: '12px', height: '12px', borderWidth: '2px' }}></div>}
+                                            {domainMsg}
+                                        </div>
                                     )}
                                     <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
                                         💡 推荐：使用你们的名字缩写或纪念日
