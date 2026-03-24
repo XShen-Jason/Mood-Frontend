@@ -147,7 +147,7 @@ export default function Home() {
                 style={{ transform: `translateY(-${activeScreen * 100}dvh)` }}
             >
                 {/* ─── SCREEN 0: Hero Intent Selection ─── */}
-                <div className="w-full h-[100dvh] shrink-0 flex flex-col items-center relative pt-20 md:pt-0 pb-32 md:pb-0 overflow-y-auto md:overflow-hidden custom-scrollbar">
+                <div className="w-full h-[100dvh] shrink-0 flex flex-col items-center relative pt-28 md:pt-0 pb-32 md:pb-0 overflow-y-auto md:overflow-hidden custom-scrollbar">
                     <div className="absolute top-1/4 -left-20 w-[800px] h-[800px] rounded-full pointer-events-none z-0" style={{ background: 'radial-gradient(circle, rgba(224,142,254,0.15) 0%, transparent 60%)' }}></div>
                     <div className="absolute bottom-1/4 -right-20 w-[700px] h-[700px] rounded-full pointer-events-none z-0" style={{ background: 'radial-gradient(circle, rgba(144,148,250,0.15) 0%, transparent 60%)' }}></div>
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-[100vh] pointer-events-none z-0" style={{ background: 'radial-gradient(ellipse at center, rgba(36,32,74,0.4) 0%, transparent 60%)' }}></div>

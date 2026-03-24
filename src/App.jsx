@@ -48,6 +48,12 @@ function ProtectedRoute({ children, adminOnly = false }) {
 function Navbar() {
     const { user, profile, signOut } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // Hide global Navbar on Builder page on mobile (it has its own header)
+    if (window.innerWidth < 768 && location.pathname.startsWith('/builder')) {
+        return null;
+    }
 
     async function handleSignOut() {
         await signOut();
@@ -250,22 +256,24 @@ export default function App() {
                 }}
             />
             <Navbar />
-            <Suspense fallback={<PageLoader />}>
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/gallery" element={<Gallery />} />
-                    <Route path="/builder" element={<Builder />} />
-                    <Route path="/builder/:templateName" element={<Builder />} />
-                    <Route path="/upgrade" element={<Upgrade />} />
-                    <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-                    <Route path="/admin" element={<ProtectedRoute adminOnly={true}><Admin /></ProtectedRoute>} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/auth/callback" element={<AuthCallback />} />
-                    <Route path="/myspace" element={<ProtectedRoute><MySpace /></ProtectedRoute>} />
-                    <Route path="/my-space" element={<ProtectedRoute><MySpace /></ProtectedRoute>} />
-                    <Route path="/preview/:templateName" element={<Preview />} />
-                </Routes>
-            </Suspense>
+            <div className={`flex-grow ${(location.pathname.startsWith('/builder') || location.pathname === '/') ? '' : 'pt-16 md:pt-0'}`}>
+                <Suspense fallback={<PageLoader />}>
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/gallery" element={<Gallery />} />
+                        <Route path="/builder" element={<Builder />} />
+                        <Route path="/builder/:templateName" element={<Builder />} />
+                        <Route path="/upgrade" element={<Upgrade />} />
+                        <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+                        <Route path="/admin" element={<ProtectedRoute adminOnly={true}><Admin /></ProtectedRoute>} />
+                        <Route path="/auth" element={<Auth />} />
+                        <Route path="/auth/callback" element={<AuthCallback />} />
+                        <Route path="/myspace" element={<ProtectedRoute><MySpace /></ProtectedRoute>} />
+                        <Route path="/my-space" element={<ProtectedRoute><MySpace /></ProtectedRoute>} />
+                        <Route path="/preview/:templateName" element={<Preview />} />
+                    </Routes>
+                </Suspense>
+            </div>
             <MobileTabBar />
             <GlobalFooter />
         </AuthProvider>

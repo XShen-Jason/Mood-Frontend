@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, useSearchParams, Link, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { listTemplates, renderProject, getConfigBySubdomain, getUserStatus, checkDomainAvailability } from '../api/client.js';
@@ -20,6 +20,24 @@ const DEFAULT_VALUES = {
     paragraphs: '在这个特别的日子里，\n我想对你说，\n遇见你是我这辈子最幸运的事。'
 };
 
+const TEMPLATE_NAME_MAP = {
+    starry_confession: '星空告白',
+    love_letter: '情书时代',
+    neon_heart: '霓虹心跳',
+    rainy_apology: '雨夜低语',
+    warm_light: '微光倾听',
+    broken_glass: '时光拼图',
+    golden_memories: '流金岁月',
+    celebration_fireworks: '花火灿烂',
+    polaroid_wall: '拍立得影集',
+    vintage_film: '复古胶卷',
+    breeze_diary: '微风手账',
+    constellation_map: '星轨连线',
+    minimal_white: '极简白纸',
+    lofi_room: 'Lofi 房间',
+    sunset_glow: '落日余晖'
+};
+
 export default function Builder() {
     const { templateName } = useParams();
     const navigate = useNavigate();
@@ -29,8 +47,36 @@ export default function Builder() {
     const editSubdomain = searchParams.get('edit');
 
     // Mobile States
-    const [activeTab, setActiveTab] = useState('content'); // 'content', 'template', 'media', 'publish'
+    const [activeTab, setActiveTab] = useState('template'); // 'template', 'content', 'publish'
     const [isSheetOpen, setIsSheetOpen] = useState(true);
+
+    // Mobile Gesture State
+    const [touchStartY, setTouchStartY] = useState(null);
+    const [dragOffset, setDragOffset] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
+
+    const handleTouchStart = (e) => {
+        setTouchStartY(e.clientY || (e.touches && e.touches[0].clientY));
+        setIsDragging(true);
+    };
+    const handleTouchMove = (e) => {
+        if (!isDragging || touchStartY === null) return;
+        const currentY = e.clientY || (e.touches && e.touches[0].clientY);
+        setDragOffset(touchStartY - currentY);
+    };
+    const handleTouchEnd = (e) => {
+        if (!isDragging || touchStartY === null) return;
+        const currentY = e.clientY || (e.changedTouches && e.changedTouches[0].clientY);
+        const delta = touchStartY - currentY;
+        
+        // Snap logic: if swipe is significant, toggle state
+        if (delta > 80) setIsSheetOpen(true);
+        else if (delta < -80) setIsSheetOpen(false);
+        
+        setIsDragging(false);
+        setTouchStartY(null);
+        setDragOffset(0);
+    };
 
     const [templates, setTemplates] = useState([]);
     const [selectedTemplate, setSelected] = useState(null);
@@ -45,6 +91,11 @@ export default function Builder() {
     // BSR (Browser-Side Rendering) Raw HTML
     const [rawHtml, setRawHtml] = useState(null);
     const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+    const iframeRef = useRef(null);
+
+    const scrollToField = (key) => {
+        iframeRef.current?.contentWindow?.postMessage({ type: 'bsr-scroll', field: key }, '*');
+    };
 
     // Domain Checker State
     const [domainStatus, setDomainStatus] = useState('idle'); // idle, checking, available, taken, error
@@ -276,13 +327,19 @@ export default function Builder() {
             previewHtml = `${baseTag}\n${hideScrollbarStyle}\n${rawHtml}`;
         }
 
+        // Simple, faithful substitution: replace every {{key}} with its raw value.
+        // No wrappers, no modifications — preserves template fidelity 100%.
         previewHtml = previewHtml.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
             const k = key.trim();
-            const val = fieldValues[k];
-            // Only replace if user explicitly provided a non-empty value.
-            if (val !== undefined && val !== '') return val;
-            return match;
+            if (fieldValues[k] !== undefined) return fieldValues[k];
+            if (DEFAULT_VALUES[k] !== undefined) return DEFAULT_VALUES[k];
+            return ''; // Always replace with empty string to prevent 404s
         });
+
+        // Inject ONLY the scroll-listener script for the mobile auto-scroll feature.
+        // This is a pure event listener and does NOT touch any template DOM or variables.
+        const scrollScript = '<script>window.addEventListener("message",function(e){if(e.data&&e.data.type==="bsr-scroll"){var el=document.getElementById(e.data.field)||document.querySelector("[data-field=\'"+(e.data.field)+"\']");if(el){var t=el.getBoundingClientRect().top+window.pageYOffset-100;window.scrollTo({top:t,behavior:"smooth"})}}})</' + '/script>';
+        previewHtml = previewHtml.includes('</body>') ? previewHtml.replace('</body>', scrollScript + '</body>') : previewHtml + scrollScript;
     }
 
     // Fallback animation for Safari/older browsers without View Transitions
@@ -533,7 +590,7 @@ export default function Builder() {
             <div className="lg:hidden flex flex-col h-full w-full relative">
                 
                 {/* Mobile Top Header */}
-                <header className="fixed top-0 w-full z-50 flex items-center justify-between px-6 h-16 bg-surface/60 backdrop-blur-2xl">
+                <header className={`fixed top-0 w-full z-50 flex items-center justify-between px-6 h-16 bg-surface/60 backdrop-blur-2xl transition-transform duration-500 ${!isSheetOpen ? '-translate-y-full' : 'translate-y-0'}`}>
                     <div className="flex items-center gap-4">
                         <button 
                             onClick={() => {
@@ -547,34 +604,41 @@ export default function Builder() {
                             <span className="material-symbols-outlined text-primary">arrow_back</span>
                         </button>
                         <div className="flex flex-col">
-                            <h1 className="text-xl font-regular text-on-surface font-headline tracking-tight truncate max-w-[150px]">
-                                {subdomain || '未命名空间'}
+                            <h1 className="text-xl font-regular text-on-surface font-headline tracking-tight truncate max-w-[120px]">
+                                {selectedTemplate?.title || TEMPLATE_NAME_MAP[selectedTemplate?.name] || selectedTemplate?.name || '未命名空间'}
                             </h1>
                             <span className="text-[10px] text-on-surface-variant uppercase tracking-widest font-medium">
-                                {loading ? 'Saving...' : 'Draft Saved'}
+                                {loading ? 'Saving...' : 'Live Preview'}
                             </span>
                         </div>
                     </div>
-                    <button className="text-primary font-medium font-headline tracking-tight text-sm px-4 py-2 rounded-full transition-colors">
-                        已保存
-                    </button>
+                    <Link to="/" className="text-primary font-medium font-headline tracking-tight text-sm px-4 py-2 hover:bg-white/5 rounded-full transition-colors flex items-center gap-2" style={{ textDecoration: 'none' }}>
+                        Mood Space
+                        <span className="material-symbols-outlined text-sm">home</span>
+                    </Link>
                 </header>
 
-                {/* Mobile Live Preview (Background) */}
-                <main className="flex-grow relative overflow-hidden pt-16">
-                    <div className="absolute inset-0 bg-surface/80 opacity-50 pointer-events-none z-0"></div>
+                {/* Mobile Live Preview (Proportional Phone Frame) */}
+                <main 
+                    className="flex-grow flex items-center justify-center relative overflow-hidden h-full pt-20 pb-24"
+                    onClick={() => !isSheetOpen && setIsSheetOpen(true)}
+                >
+                    <div className="absolute inset-0 bg-surface-dim z-0 pointer-events-none"></div>
                     
-                    <div className="relative z-10 flex items-center justify-center h-full px-6 pb-40">
-                        <div className="w-full aspect-[9/16] rounded-2xl overflow-hidden border border-white/5 shadow-2xl relative">
+                    <div 
+                        className="relative z-10 flex items-center justify-center w-full h-full px-4 pb-12"
+                    >
+                        <div className="w-full max-w-[360px] aspect-[9/19.5] max-h-[82vh] rounded-[3rem] overflow-hidden border-4 border-white/20 shadow-[0_40px_80px_rgba(0,0,0,0.8)] relative bg-black">
                              {(!selectedTemplate || !rawHtml) ? (
-                                <div className="absolute inset-0 bg-surface flex flex-col items-center justify-center p-8 text-center">
-                                    <span className="material-symbols-outlined text-4xl text-primary/30 mb-4">edit_document</span>
-                                    <span className="text-on-surface-variant font-light text-sm tracking-widest leading-relaxed">
-                                        选择模板并输入文字<br/>即可在这里实时预览效果
+                                <div className="absolute inset-0 bg-surface/90 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
+                                    <span className="material-symbols-outlined text-5xl text-primary/40 mb-6 animate-pulse">edit_document</span>
+                                    <span className="text-on-surface-variant font-light text-base tracking-widest leading-relaxed opacity-80">
+                                        选择模板并输入文字<br/>实时见证星空绽放
                                     </span>
                                 </div>
                             ) : (
                                 <iframe
+                                    ref={iframeRef}
                                     srcDoc={previewHtml}
                                     style={{ width: '100%', height: '100%', border: 'none', background: '#000' }}
                                     title="Mobile Live Preview"
@@ -587,15 +651,24 @@ export default function Builder() {
 
                 {/* Mobile Draggable Bottom Sheet */}
                 <div 
-                    className={`fixed inset-x-0 bottom-0 z-40 bg-[#120f2f]/95 backdrop-blur-3xl rounded-t-[32px] shadow-[0_-20px_60px_rgba(0,0,0,0.6)] border-t border-white/5 pt-3 transition-transform duration-500 flex flex-col
-                        ${isSheetOpen ? 'translate-y-0 h-[65vh]' : 'translate-y-[calc(100%-80px)] h-[80px]'}`}
+                    style={{
+                        transform: isDragging 
+                            ? `translateY(${isSheetOpen ? -dragOffset : `calc(65vh - 44px - ${dragOffset}px)`})` 
+                            : undefined,
+                        transition: isDragging ? 'none' : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+                    }}
+                    className={`fixed inset-x-0 bottom-0 z-40 bg-[#120f2f]/95 backdrop-blur-3xl rounded-t-[32px] shadow-[0_-20px_60px_rgba(0,0,0,0.6)] border-t border-white/5 pt-1 flex flex-col h-[65vh]
+                        ${!isDragging && (isSheetOpen ? 'translate-y-0' : 'translate-y-[calc(100%-44px)]')}`}
                 >
-                    {/* Handle Bar */}
+                    {/* Handle Bar (Draggable) */}
                     <div 
-                        className="w-full py-4 flex-shrink-0 cursor-pointer"
-                        onClick={() => setIsSheetOpen(!isSheetOpen)}
+                        className="w-full py-4 flex-shrink-0 cursor-grab active:cursor-grabbing touch-none"
+                        onPointerDown={handleTouchStart}
+                        onPointerMove={handleTouchMove}
+                        onPointerUp={handleTouchEnd}
+                        onClick={() => !isDragging && setIsSheetOpen(!isSheetOpen)}
                     >
-                        <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto"></div>
+                        <div className="w-12 h-1 bg-white/20 rounded-full mx-auto shadow-sm"></div>
                     </div>
 
                     <div className="flex-1 overflow-y-auto px-6 pb-32">
@@ -617,6 +690,7 @@ export default function Builder() {
                                                         <textarea 
                                                             value={fieldValues[key] ?? ''}
                                                             onChange={(e) => setFieldValues((p) => ({ ...p, [key]: e.target.value }))}
+                                                            onFocus={() => scrollToField(key)}
                                                             className="w-full bg-transparent border-0 border-b-2 border-white/10 py-3 text-lg text-on-surface focus:ring-0 focus:border-primary transition-all resize-none"
                                                             rows="4"
                                                         />
@@ -625,6 +699,7 @@ export default function Builder() {
                                                             type="text"
                                                             value={fieldValues[key] ?? ''}
                                                             onChange={(e) => setFieldValues((p) => ({ ...p, [key]: e.target.value }))}
+                                                            onFocus={() => scrollToField(key)}
                                                             className="w-full bg-transparent border-0 border-b-2 border-white/10 py-3 text-lg text-on-surface focus:ring-0 focus:border-primary transition-all"
                                                         />
                                                     )}
@@ -666,17 +741,19 @@ export default function Builder() {
                             </div>
                         )}
 
-                        {activeTab === 'media' && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        {activeTab === 'publish' && (
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300 pb-10">
                                 <header className="flex justify-between items-center mb-6">
-                                    <h3 className="font-headline text-2xl font-light text-on-surface">高级设置</h3>
-                                    <span className="material-symbols-outlined text-primary">settings_suggest</span>
+                                    <h3 className="font-headline text-2xl font-light text-on-surface">发布 & 设置</h3>
+                                    <span className="material-symbols-outlined text-primary">rocket_launch</span>
                                 </header>
-                                <div className="p-6 rounded-2xl bg-white/5 border border-white/5 space-y-4">
+                                
+                                {/* Merged Settings Section */}
+                                <div className="p-5 rounded-2xl bg-white/5 border border-white/5 space-y-4">
                                      <div className="flex justify-between items-center">
-                                        <div>
+                                        <div className="flex-1 pr-4">
                                             <div className="text-sm font-medium">显示“制作同款”</div>
-                                            <div className="text-xs text-on-surface-variant font-light">在页面底部加入精致的推广标签</div>
+                                            <div className="text-[10px] text-on-surface-variant font-light mt-0.5">在页面底部加入精致的推广标签</div>
                                         </div>
                                         <label className="relative inline-flex items-center cursor-pointer">
                                             <input 
@@ -690,16 +767,7 @@ export default function Builder() {
                                         </label>
                                     </div>
                                 </div>
-                            </div>
-                        )}
 
-                        {activeTab === 'publish' && (
-                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300 pb-10">
-                                <header className="flex justify-between items-center mb-6">
-                                    <h3 className="font-headline text-2xl font-light text-on-surface">发布宇宙</h3>
-                                    <span className="material-symbols-outlined text-primary">rocket_launch</span>
-                                </header>
-                                
                                 <div className="relative group">
                                     <label className="block text-[10px] text-primary tracking-widest uppercase mb-1 font-semibold">专属网址</label>
                                     <div className="flex items-center gap-2 border-b-2 border-white/10 py-3">
@@ -723,7 +791,7 @@ export default function Builder() {
                                 <button 
                                     onClick={handleSubmit}
                                     disabled={loading || domainStatus === 'checking'}
-                                    className="w-full py-5 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
+                                    className="w-full py-5 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold shadow-xl shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50"
                                 >
                                     {loading ? '正在生成宇宙...' : (editSubdomain ? '更新当前宇宙' : '点亮这片星空')}
                                 </button>
@@ -733,34 +801,27 @@ export default function Builder() {
                 </div>
 
                 {/* Mobile Bottom Navigation Bar (Tab Bar) */}
-                <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-[#120f2f]/80 backdrop-blur-3xl rounded-t-[24px] shadow-[0_-20px_40px_rgba(0,0,0,0.4)] border-t border-white/5">
-                    <button 
-                        onClick={() => { setActiveTab('content'); setIsSheetOpen(true); }}
-                        className={`flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${activeTab === 'content' ? 'bg-primary/20 text-primary' : 'text-on-surface-variant/60'}`}
-                    >
-                        <span className="material-symbols-outlined" style={{ fontVariationSettings: `'FILL' ${activeTab === 'content' ? 1 : 0}` }}>edit_note</span>
-                        <span className="text-[10px] tracking-wide uppercase mt-1">内容</span>
-                    </button>
+                <nav className={`fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-8 pt-3 bg-[#120f2f]/80 backdrop-blur-3xl rounded-t-[24px] shadow-[0_-20px_40px_rgba(0,0,0,0.4)] border-t border-white/5 transition-transform duration-500 ${!isSheetOpen ? 'translate-y-full' : 'translate-y-0'}`}>
                     <button 
                         onClick={() => { setActiveTab('template'); setIsSheetOpen(true); }}
-                        className={`flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${activeTab === 'template' ? 'bg-primary/20 text-primary' : 'text-on-surface-variant/60'}`}
+                        className={`flex flex-col items-center justify-center p-2 px-6 rounded-2xl transition-all ${activeTab === 'template' ? 'bg-primary/20 text-primary' : 'text-on-surface-variant/60'}`}
                     >
                         <span className="material-symbols-outlined" style={{ fontVariationSettings: `'FILL' ${activeTab === 'template' ? 1 : 0}` }}>auto_awesome</span>
                         <span className="text-[10px] tracking-wide uppercase mt-1">模板</span>
                     </button>
                     <button 
-                        onClick={() => { setActiveTab('media'); setIsSheetOpen(true); }}
-                        className={`flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${activeTab === 'media' ? 'bg-primary/20 text-primary' : 'text-on-surface-variant/60'}`}
+                        onClick={() => { setActiveTab('content'); setIsSheetOpen(true); }}
+                        className={`flex flex-col items-center justify-center p-2 px-6 rounded-2xl transition-all ${activeTab === 'content' ? 'bg-primary/20 text-primary' : 'text-on-surface-variant/60'}`}
                     >
-                        <span className="material-symbols-outlined" style={{ fontVariationSettings: `'FILL' ${activeTab === 'media' ? 1 : 0}` }}>settings_suggest</span>
-                        <span className="text-[10px] tracking-wide uppercase mt-1">设置</span>
+                        <span className="material-symbols-outlined" style={{ fontVariationSettings: `'FILL' ${activeTab === 'content' ? 1 : 0}` }}>edit_note</span>
+                        <span className="text-[10px] tracking-wide uppercase mt-1">内容</span>
                     </button>
                     <button 
                         onClick={() => { setActiveTab('publish'); setIsSheetOpen(true); }}
-                        className={`flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${activeTab === 'publish' ? 'bg-primary/20 text-primary' : 'text-on-surface-variant/60'}`}
+                        className={`flex flex-col items-center justify-center p-2 px-6 rounded-2xl transition-all ${activeTab === 'publish' ? 'bg-primary/20 text-primary' : 'text-on-surface-variant/60'}`}
                     >
                         <span className="material-symbols-outlined" style={{ fontVariationSettings: `'FILL' ${activeTab === 'publish' ? 1 : 0}` }}>rocket_launch</span>
-                        <span className="text-[10px] tracking-wide uppercase mt-1">发布</span>
+                        <span className="text-[10px] tracking-wide uppercase mt-1">发布 & 设置</span>
                     </button>
                 </nav>
             </div>
