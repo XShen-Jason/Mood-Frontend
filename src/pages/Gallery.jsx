@@ -53,7 +53,7 @@ export default function Gallery() {
     }, [templates, activeIntent]);
 
     return (
-        <div className="w-full min-h-screen pt-24 pb-24 px-6 md:px-12 max-w-[1600px] mx-auto flex flex-col font-body text-on-surface relative">
+        <div className="w-full min-h-screen pt-20 pb-24 px-5 md:px-12 max-w-[1600px] mx-auto flex flex-col font-body text-on-surface relative">
             {/* Background Base */}
             <div className="fixed inset-0 z-[-1] pointer-events-none" style={{ background: 'radial-gradient(circle at 80% 20%, #1e1a41 0%, #0d0a27 100%)' }}></div>
             
@@ -62,22 +62,22 @@ export default function Gallery() {
             <div className="fixed bottom-1/4 -left-24 w-[300px] h-[300px] bg-secondary/5 rounded-full blur-[80px] pointer-events-none z-0"></div>
 
             {/* Context Header */}
-            <header className="mb-10 lg:mb-16 relative z-10 w-full max-w-4xl">
-                <div className="flex flex-wrap items-center gap-3 mb-4">
-                    <span className="px-3 py-1.5 rounded-full bg-primary/10 text-primary-dim text-xs font-bold tracking-widest uppercase border border-primary/20">
-                        {activeIntent === 'all' ? 'Intent: 探索全部' : `Intent: ${INTENT_DATA[activeIntent].categoryLabel}`}
+            <header className="mb-8 lg:mb-16 relative z-10 w-full max-w-4xl">
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                    <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary-dim text-[10px] font-bold tracking-widest uppercase border border-primary/20">
+                        {activeIntent === 'all' ? '探索全部' : `${INTENT_DATA[activeIntent].categoryLabel}`}
                     </span>
                     {location.state?.sceneText && activeIntent === location.state?.intent && (
-                        <span className="px-3 py-1.5 rounded-full bg-secondary/10 text-secondary-dim text-xs font-bold tracking-widest uppercase border border-secondary/20 line-clamp-1 max-w-sm">
-                            Scene: "{location.state.sceneText}"
+                        <span className="px-2.5 py-1 rounded-full bg-secondary/10 text-secondary-dim text-[10px] font-bold tracking-widest uppercase border border-secondary/20 line-clamp-1 max-w-[200px]">
+                            {location.state.sceneText}
                         </span>
                     )}
                 </div>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline font-light text-on-surface tracking-tight leading-tight mb-4">
+                <h1 className="text-3xl md:text-5xl lg:text-6xl font-headline font-light text-on-surface tracking-tight leading-tight mb-4">
                     {activeIntent === 'all' ? '发现更多表达心意的方式' : INTENT_DATA[activeIntent].title}
                 </h1>
-                <p className="text-on-surface-variant text-base md:text-lg font-light leading-relaxed">
-                    {activeIntent === 'all' ? '从海量优质模板中，挑选最契合你此刻情绪的那一个。用最浪漫的网页，承载你的专属记忆。' : INTENT_DATA[activeIntent].subtitle}
+                <p className="text-on-surface-variant text-base md:text-lg font-light leading-relaxed opacity-90">
+                    {activeIntent === 'all' ? '从海量优质模板中，挑选最契合你此刻情绪的那一个。' : INTENT_DATA[activeIntent].subtitle}
                 </p>
             </header>
 
@@ -86,27 +86,27 @@ export default function Gallery() {
                 
                 {/* Left Categories Navbar (Sticky) */}
                 <aside className="w-full lg:w-64 shrink-0">
-                    <div className="sticky top-28 bg-surface-container-low/40 backdrop-blur-xl border border-outline-variant/10 rounded-2xl p-4 md:p-6 shadow-lg">
-                        <div className="mb-6 mb-4 px-2">
+                    <div className="sticky top-24 bg-surface-container-low/40 backdrop-blur-xl border border-outline-variant/10 rounded-2xl p-4 md:p-6 shadow-lg">
+                        <div className="hidden lg:block mb-6 px-2">
                             <h2 className="text-sm font-headline font-bold uppercase tracking-widest text-primary-dim opacity-80">Categories</h2>
                             <p className="text-on-surface-variant text-xs mt-1 font-light tracking-wide">按情绪场景筛选</p>
                         </div>
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 no-scrollbar select-none">
                             <button 
                                 onClick={() => setActiveIntent('all')}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium tracking-wide ${activeIntent === 'all' ? 'text-primary-fixed bg-primary/10 border border-primary/20' : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'}`}
+                                className={`flex items-center gap-2 lg:gap-3 px-4 py-2.5 lg:py-3 rounded-xl transition-all duration-300 font-medium tracking-wide whitespace-nowrap lg:whitespace-normal ${activeIntent === 'all' ? 'text-primary-fixed bg-primary/10 border border-primary/20 ring-1 ring-primary/20' : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface border border-transparent'}`}
                             >
-                                <span className="material-symbols-outlined text-primary-dim text-xl">grid_view</span>
-                                <span>全部模板</span>
+                                <span className="material-symbols-outlined text-primary-dim text-lg lg:text-xl">grid_view</span>
+                                <span className="text-sm lg:text-base">全部模板</span>
                             </button>
                             {Object.entries(INTENT_DATA).map(([key, data]) => (
                                 <button 
                                     key={key}
                                     onClick={() => setActiveIntent(key)}
-                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium tracking-wide ${activeIntent === key ? 'text-primary-fixed bg-primary/10 border border-primary/20' : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'}`}
+                                    className={`flex items-center gap-2 lg:gap-3 px-4 py-2.5 lg:py-3 rounded-xl transition-all duration-300 font-medium tracking-wide whitespace-nowrap lg:whitespace-normal ${activeIntent === key ? 'text-primary-fixed bg-primary/10 border border-primary/20 ring-1 ring-primary/20' : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface border border-transparent'}`}
                                 >
-                                    <span className="material-symbols-outlined text-primary-dim text-xl">{data.icon}</span>
-                                    <span>{data.categoryLabel}</span>
+                                    <span className="material-symbols-outlined text-primary-dim text-lg lg:text-xl">{data.icon}</span>
+                                    <span className="text-sm lg:text-base">{data.categoryLabel}</span>
                                 </button>
                             ))}
                         </div>
@@ -153,16 +153,16 @@ export default function Gallery() {
                             return (
                                 <div 
                                     key={template.name}
-                                    className="glass-card group p-6 xl:p-8 rounded-2xl transition-all duration-500 hover:bg-surface-container-highest hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] hover:border-primary/30 flex flex-col h-full relative overflow-hidden bg-surface-container-low border border-outline-variant/10"
+                                    className="glass-card group p-5 xl:p-8 rounded-2xl transition-all duration-500 hover:bg-surface-container-highest hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] hover:border-primary/30 flex flex-col h-full relative overflow-hidden bg-surface-container-low border border-outline-variant/10 active:scale-[0.98]"
                                 >
                                     {isRecommended && (
                                         <div className="absolute top-0 right-0 px-4 py-1.5 bg-gradient-to-r from-primary to-primary-container text-on-primary text-[10px] font-bold tracking-widest uppercase rounded-bl-xl shadow-md z-10">
                                             核心推荐
                                         </div>
                                     )}
-                                    <div className="flex items-start justify-between mb-4 z-10 relative">
+                                    <div className="flex items-start justify-between mb-3 z-10 relative">
                                         <h4 className="text-xl lg:text-2xl font-headline text-on-surface font-medium pr-4">{template.title || template.name}</h4>
-                                        <span className={`material-symbols-outlined text-3xl opacity-80 ${isPro ? 'text-secondary-dim' : 'text-primary-dim'}`}>
+                                        <span className={`material-symbols-outlined text-2xl lg:text-3xl opacity-80 ${isPro ? 'text-secondary-dim' : 'text-primary-dim'}`}>
                                             {template.icon}
                                         </span>
                                     </div>

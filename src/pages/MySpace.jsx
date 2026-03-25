@@ -177,11 +177,11 @@ export default function MySpace() {
                 <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 80% 20%, rgba(224, 142, 254, 0.08) 0%, transparent 40%), radial-gradient(circle at 10% 80%, rgba(144, 148, 250, 0.1) 0%, transparent 50%)' }} />
             </div>
 
-            <main className="pt-32 pb-24 px-6 md:px-12 max-w-[1600px] mx-auto min-h-screen flex flex-col">
+            <main className="pt-24 lg:pt-32 pb-24 px-5 md:px-12 max-w-[1600px] mx-auto min-h-screen flex flex-col">
                 <div className="flex flex-col lg:flex-row gap-8 flex-1">
                     
-                    <aside className="lg:w-[350px] flex-shrink-0 space-y-6">
-                        <div className="glass-card rounded-lg p-8 flex flex-col items-center text-center relative overflow-hidden bg-surface-container-low/40 backdrop-blur-xl border border-outline-variant/10">
+                    <aside className="lg:w-[350px] flex-shrink-0 space-y-4">
+                        <div className="glass-card rounded-2xl p-6 lg:p-8 flex flex-col items-center text-center relative overflow-hidden bg-surface-container-low/40 backdrop-blur-xl border border-outline-variant/10">
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
                             
                             <div className="relative mb-6">
@@ -236,7 +236,7 @@ export default function MySpace() {
                                 <span className="material-symbols-outlined text-primary text-lg">analytics</span>
                                 额度统计
                             </h3>
-                            <div className="space-y-6 flex flex-col">
+                            <div className="grid grid-cols-2 lg:flex lg:flex-col gap-6 w-full">
                                 <div className="flex items-center gap-4">
                                     <div className="relative w-16 h-16 flex items-center justify-center flex-shrink-0">
                                         <svg className="w-full h-full -rotate-90">
@@ -338,8 +338,8 @@ export default function MySpace() {
                             <section>
                                 <div className="flex justify-between items-center mb-8">
                                     <div>
-                                        <h2 className="text-2xl font-headline font-bold tracking-tight text-on-surface">我的空间</h2>
-                                        <p className="text-sm text-on-surface-variant mt-1">管理并定制您的个人情感次元</p>
+                                        <h2 className="text-xl md:text-2xl font-headline font-bold tracking-tight text-on-surface">我的空间</h2>
+                                        <p className="text-xs md:text-sm text-on-surface-variant mt-0.5">管理您的个人情感次元</p>
                                     </div>
                                     <div className="flex bg-surface-container-high/60 p-1 rounded-lg border border-outline-variant/10">
                                         <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded shadow-sm cursor-pointer transition-colors ${viewMode === 'grid' ? 'bg-surface-bright text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}><span className="material-symbols-outlined text-base">grid_view</span></button>
@@ -402,8 +402,8 @@ export default function MySpace() {
                                         }
 
                                         return (
-                                            <div key={p.subdomain} className={`glass-card bg-surface-container-low/40 rounded-lg overflow-hidden group ${borderColorClass} transition-all flex border border-outline-variant/10 shadow-lg shadow-black/20 ${viewMode === 'grid' ? 'flex-col h-[280px]' : 'flex-row h-32 items-stretch'}`}>
-                                                <div className={`relative bg-surface-container-highest overflow-hidden shrink-0 ${viewMode === 'grid' ? 'h-32 w-full' : 'w-40 h-full'}`}>
+                                            <div key={p.subdomain} className={`glass-card bg-surface-container-low/40 rounded-2xl overflow-hidden group ${borderColorClass} transition-all flex border border-outline-variant/10 shadow-lg shadow-black/20 ${viewMode === 'grid' ? 'flex-col h-[220px] lg:h-[280px]' : 'flex-row h-28 lg:h-32 items-stretch'} active:scale-[0.98]`}>
+                                                <div className={`relative bg-surface-container-highest overflow-hidden shrink-0 ${viewMode === 'grid' ? 'h-24 lg:h-32 w-full' : 'w-32 lg:w-40 h-full'}`}>
                                                     <div className={`absolute inset-0 bg-gradient-to-br ${gradientClass} group-hover:scale-110 transition-transform duration-700`}></div>
                                                     <div className="absolute inset-0 flex items-center justify-center shadow-sm">
                                                         <span className={`material-symbols-outlined ${textClass} text-4xl bg-black/30 backdrop-blur-md p-3 rounded-2xl border border-white/10`}>{iconStr}</span>
@@ -412,10 +412,10 @@ export default function MySpace() {
                                                 </div>
                                                 <div className={`p-5 flex flex-col flex-1 justify-between ${viewMode === 'list' && 'py-4'}`}>
                                                     <div className="overflow-hidden">
-                                                        <h4 className="text-xl font-headline font-semibold mb-1 text-on-surface truncate">
+                                                        <h4 className="text-lg lg:text-xl font-headline font-semibold mb-0.5 text-on-surface truncate">
                                                             {TEMPLATE_NAMES[p.template_type] || p.template_type}
                                                         </h4>
-                                                        <p className="text-sm text-on-surface-variant truncate block w-full tracking-wide">{p.subdomain}.{BASE_DOMAIN}</p>
+                                                        <p className="text-xs lg:text-sm text-on-surface-variant truncate block w-full tracking-wide">{p.subdomain}.{BASE_DOMAIN}</p>
                                                     </div>
                                                     <div className={`flex items-center justify-between border-t border-outline-variant/10 shrink-0 ${viewMode === 'grid' ? 'mt-4 pt-4' : 'mt-2 pt-2'}`}>
                                                         <div className="flex gap-2">
@@ -430,11 +430,11 @@ export default function MySpace() {
                                                                     navigator.clipboard.writeText(url);
                                                                     toast.success('已复制专属网址！');
                                                                 }}
-                                                                className={`w-9 h-9 rounded-full flex items-center justify-center bg-surface-container-high/60 ${hoverBgTextClass} text-on-surface-variant transition-colors border border-outline-variant/5 cursor-pointer`} title="复制链接">
-                                                                <span className="material-symbols-outlined text-lg">share</span>
+                                                                className={`w-8 h-8 lg:w-9 lg:h-9 rounded-full flex items-center justify-center bg-surface-container-high/60 ${hoverBgTextClass} text-on-surface-variant transition-colors border border-outline-variant/5 cursor-pointer`} title="复制链接">
+                                                                <span className="material-symbols-outlined text-base lg:text-lg">share</span>
                                                             </button>
                                                         </div>
-                                                        <div className="text-xs text-on-surface-variant/70 font-medium">
+                                                        <div className="text-[10px] lg:text-xs text-on-surface-variant/70 font-medium">
                                                             {new Date(p.updated_at || p.created_at).toLocaleDateString('zh-CN')}
                                                         </div>
                                                     </div>
@@ -444,11 +444,11 @@ export default function MySpace() {
                                     })}
 
                                     {!loadingProjects && (
-                                        <Link to="/gallery" className={`border border-dashed border-outline-variant/30 bg-surface-container-low/10 rounded-lg flex flex-col items-center justify-center text-on-surface-variant hover:border-primary/40 hover:bg-primary/5 hover:text-on-surface transition-all group shadow-sm ${viewMode === 'grid' ? 'h-[280px]' : 'h-32'}`}>
-                                            <div className="w-14 h-14 rounded-full bg-surface-container-high/60 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:bg-primary/20 transition-all border border-outline-variant/10">
-                                                <span className="material-symbols-outlined text-3xl group-hover:text-primary transition-colors">add</span>
+                                        <Link to="/gallery" className={`border border-dashed border-outline-variant/30 bg-surface-container-low/10 rounded-2xl flex flex-col items-center justify-center text-on-surface-variant hover:border-primary/40 hover:bg-primary/5 hover:text-on-surface transition-all group shadow-sm ${viewMode === 'grid' ? 'h-[220px] lg:h-[280px]' : 'h-28 lg:h-32'}`}>
+                                            <div className="w-10 h-10 lg:w-14 lg:h-14 rounded-full bg-surface-container-high/60 flex items-center justify-center mb-2 lg:mb-3 group-hover:scale-110 group-hover:bg-primary/20 transition-all border border-outline-variant/10">
+                                                <span className="material-symbols-outlined text-2xl lg:text-3xl group-hover:text-primary transition-colors">add</span>
                                             </div>
-                                            <span className="font-headline font-medium text-base tracking-wide">前往模板大厅创建空间</span>
+                                            <span className="font-headline font-medium text-sm lg:text-base tracking-wide">添加新空间</span>
                                         </Link>
                                     )}
                                 </div>

@@ -135,9 +135,9 @@ export default function Upgrade() {
 
     // Render Pricing View
     return (
-        <div className="page-container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '60px 20px' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }} className="page-container px-5 py-12 lg:py-16">
             {/* --- Hero Section --- */}
-            <div style={{ textAlign: 'center', marginBottom: '80px' }}>
+            <div className="text-center mb-12 lg:mb-20">
                 <div style={{ 
                     display: 'inline-block', padding: '10px 24px', borderRadius: '100px', 
                     background: 'var(--pink-light)', color: 'var(--pink)', 
@@ -146,10 +146,10 @@ export default function Upgrade() {
                 }}>
                     ✨ 开启您的专属浪漫空间
                 </div>
-                <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3.2rem)', fontWeight: 900, color: '#1e293b', marginBottom: '20px', letterSpacing: '-1px' }}>
+                <h1 style={{ fontSize: 'clamp(1.8rem, 8vw, 3.2rem)', fontWeight: 900, color: '#1e293b', marginBottom: '20px', letterSpacing: '-1px', lineHeight: 1.2 }}>
                     选择最适合您的 <span style={{ color: 'var(--pink)', background: 'linear-gradient(120deg, #fce7f3 0%, #fce7f3 100%)', backgroundRepeat: 'no-repeat', backgroundSize: '100% 0.3em', backgroundPosition: '0 0.8em' }}>特权等级</span>
                 </h1>
-                <p style={{ fontSize: '1.2rem', color: '#64748b', maxWidth: '600px', margin: '0 auto', lineHeight: 1.6 }}>
+                <p style={{ fontSize: '1.1rem', color: '#64748b', maxWidth: '600px', margin: '0 auto', lineHeight: 1.6, opacity: 0.9 }}>
                     加入 Pro 会员或合伙人计划，解锁无限创意模板与专属自定义功能，让每一个浪漫时刻都值得被永久铭记。
                 </p>
             </div>
@@ -166,7 +166,7 @@ export default function Upgrade() {
                     { icon: '💎', title: '尊贵标识', desc: '全平台尊贵会员标识，头像框及个人主页深度定制。' },
                 ].map((b, idx) => (
                     <div key={idx} style={{ 
-                        background: '#fff', padding: '30px', borderRadius: '24px', 
+                        background: '#fff', padding: '24px', borderRadius: '24px', 
                         border: '1px solid #f1f5f9', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' 
                     }}>
                         <div style={{ fontSize: '2.5rem', marginBottom: '15px' }}>{b.icon}</div>
@@ -185,7 +185,7 @@ export default function Upgrade() {
                 <div style={{
                     border: '2px solid #e2e8f0', 
                     borderRadius: '32px', 
-                    padding: '50px 40px',
+                    padding: '40px 24px lg:50px 40px',
                     background: '#fff', 
                     textAlign: 'center', 
                     boxShadow: '0 10px 20px rgba(0,0,0,0.02)',
@@ -203,8 +203,8 @@ export default function Upgrade() {
                     </div>
                     
                     <div style={{ margin: '40px 0', borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', padding: '30px 0' }}>
-                        <div style={{ fontSize: '4.2rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-2px' }}>
-                            <span style={{ fontSize: '1.8rem', verticalAlign: 'top', marginTop: '15px', display: 'inline-block' }}>¥</span>
+                        <div style={{ fontSize: 'clamp(3.2rem, 10vw, 4.2rem)', fontWeight: 900, color: '#0f172a', letterSpacing: '-2px' }}>
+                            <span style={{ fontSize: 'clamp(1.4rem, 4vw, 1.8rem)', verticalAlign: 'top', marginTop: '10px', display: 'inline-block' }}>¥</span>
                             0
                         </div>
                         <div style={{ 
@@ -273,7 +273,7 @@ export default function Upgrade() {
                         <div key={c.id} style={{
                             border: `2px solid ${isPro ? themeColor : '#e2e8f0'}`, 
                             borderRadius: '32px', 
-                            padding: '50px 40px',
+                            padding: '40px 24px lg:50px 40px',
                             background: '#fff', 
                             textAlign: 'center', 
                             boxShadow: isPro ? '0 25px 50px -12px rgba(214, 51, 108, 0.15)' : '0 10px 20px rgba(0,0,0,0.02)',
@@ -316,8 +316,8 @@ export default function Upgrade() {
                                 <div style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '1.1rem', marginBottom: '5px' }}>
                                     ¥ {(c.base_price / 100).toFixed(2)}
                                 </div>
-                                <div style={{ fontSize: '4.2rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-2px' }}>
-                                    <span style={{ fontSize: '1.8rem', verticalAlign: 'top', marginTop: '15px', display: 'inline-block' }}>¥</span>
+                                <div style={{ fontSize: 'clamp(3.2rem, 10vw, 4.2rem)', fontWeight: 900, color: '#0f172a', letterSpacing: '-2px' }}>
+                                    <span style={{ fontSize: 'clamp(1.4rem, 4vw, 1.8rem)', verticalAlign: 'top', marginTop: '10px', display: 'inline-block' }}>¥</span>
                                     {c.is_renewal 
                                         ? (c.renewal_price / 100).toFixed(2) 
                                         : (c.is_returning 
@@ -390,8 +390,8 @@ export default function Upgrade() {
             </div>
             
             {/* --- FAQ / Footer --- */}
-            <div style={{ marginTop: '100px', borderTop: '1px solid #e2e8f0', paddingTop: '60px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '60px', textAlign: 'left' }}>
+            <div style={{ marginTop: '60px', borderTop: '1px solid #e2e8f0', paddingTop: '40px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '40px', textAlign: 'left' }}>
                     <div>
                         <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1e293b', marginBottom: '25px' }}>常见问题解答</h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>

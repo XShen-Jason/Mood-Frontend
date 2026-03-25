@@ -147,65 +147,65 @@ export default function Home() {
                 style={{ transform: `translateY(-${activeScreen * 100}dvh)` }}
             >
                 {/* ─── SCREEN 0: Hero Intent Selection ─── */}
-                <div className="w-full h-[100dvh] shrink-0 flex flex-col items-center relative pt-28 md:pt-0 pb-32 md:pb-0 overflow-y-auto md:overflow-hidden custom-scrollbar">
+                <div className="w-full h-[100dvh] shrink-0 flex flex-col items-center relative pt-20 md:pt-0 pb-32 md:pb-0 overflow-y-auto md:overflow-hidden custom-scrollbar">
                     <div className="absolute top-1/4 -left-20 w-[800px] h-[800px] rounded-full pointer-events-none z-0" style={{ background: 'radial-gradient(circle, rgba(224,142,254,0.15) 0%, transparent 60%)' }}></div>
                     <div className="absolute bottom-1/4 -right-20 w-[700px] h-[700px] rounded-full pointer-events-none z-0" style={{ background: 'radial-gradient(circle, rgba(144,148,250,0.15) 0%, transparent 60%)' }}></div>
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-[100vh] pointer-events-none z-0" style={{ background: 'radial-gradient(ellipse at center, rgba(36,32,74,0.4) 0%, transparent 60%)' }}></div>
                     
                     <main className="relative z-10 w-full flex flex-col items-center justify-start md:justify-center flex-1">
-                        <div className="text-center max-w-4xl px-6 mb-12 md:mb-20 leading-relaxed mt-[-40px]">
-                            <h1 className="font-headline text-3xl md:text-7xl lg:text-8xl font-light tracking-tight text-on-surface mb-6 md:mb-8 leading-tight">
+                        <div className="text-center max-w-4xl px-5 mb-10 md:mb-20 leading-relaxed mt-[-20px] md:mt-[-40px]">
+                            <h1 className="font-headline text-4xl md:text-7xl lg:text-8xl font-light tracking-tight text-on-surface mb-6 md:mb-8 leading-tight">
                                 有些情绪，值得被<span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">认真安放</span>
                             </h1>
-                            <p className="font-body text-base md:text-2xl text-on-surface-variant font-light tracking-wide max-w-2xl mx-auto">
+                            <p className="font-body text-lg md:text-2xl text-on-surface-variant font-light tracking-wide max-w-2xl mx-auto opacity-90">
                                 顺着心的指引，点击最契合你当下的选择
                             </p>
                         </div>
                         
-                        <div className="w-full max-w-[1600px] px-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 md:gap-6 mb-16 leading-relaxed">
-                            <button onClick={() => handleIntentClick('confession')} className="glass-card p-6 md:p-8 rounded-xl flex flex-col items-center text-center group cursor-pointer transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:border-primary/40">
-                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 md:mb-6 group-hover:bg-primary/20 transition-colors">
-                                    <span className="material-symbols-outlined text-2xl md:text-3xl text-primary" data-icon="mail">mail</span>
+                        <div className="w-full max-w-[1600px] px-5 grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-6 mb-16 leading-relaxed">
+                            <button onClick={() => handleIntentClick('confession')} className="glass-card p-5 md:p-8 rounded-2xl flex flex-col items-center text-center group cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:border-primary/40 active:scale-95">
+                                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-surface-container flex items-center justify-center mb-3 md:mb-6 group-hover:bg-primary/20 transition-colors">
+                                    <span className="material-symbols-outlined text-xl md:text-3xl text-primary" data-icon="mail">mail</span>
                                 </div>
-                                <h3 className="font-headline text-lg md:text-xl text-on-surface font-light mb-1 md:mb-2">浪漫表白</h3>
-                                <p className="text-xs md:text-sm text-on-surface-variant font-light">表达掩躲在心底的想法</p>
+                                <h3 className="font-headline text-base md:text-xl text-on-surface font-light mb-1 md:mb-2">浪漫表白</h3>
+                                <p className="text-[10px] md:text-sm text-on-surface-variant font-light opacity-80">表达心底的想法</p>
                             </button>
-                            <button onClick={() => handleIntentClick('apology')} className="glass-card p-6 md:p-8 rounded-xl flex flex-col items-center text-center group cursor-pointer transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:border-secondary/40">
-                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 md:mb-6 group-hover:bg-secondary/20 transition-colors">
-                                    <span className="material-symbols-outlined text-2xl md:text-3xl text-secondary" data-icon="rebase_edit">rebase_edit</span>
+                            <button onClick={() => handleIntentClick('apology')} className="glass-card p-5 md:p-8 rounded-2xl flex flex-col items-center text-center group cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:border-secondary/40 active:scale-95">
+                                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-surface-container flex items-center justify-center mb-3 md:mb-6 group-hover:bg-secondary/20 transition-colors">
+                                    <span className="material-symbols-outlined text-xl md:text-3xl text-secondary" data-icon="rebase_edit">rebase_edit</span>
                                 </div>
-                                <h3 className="font-headline text-lg md:text-xl text-on-surface font-light mb-1 md:mb-2">想和TA和好</h3>
-                                <p className="text-xs md:text-sm text-on-surface-variant font-light">修补一段脆弱的关系</p>
+                                <h3 className="font-headline text-base md:text-xl text-on-surface font-light mb-1 md:mb-2">想和TA和好</h3>
+                                <p className="text-[10px] md:text-sm text-on-surface-variant font-light opacity-80">修补脆弱的关系</p>
                             </button>
-                            <button onClick={() => handleIntentClick('anniversary')} className="glass-card p-6 md:p-8 rounded-xl flex flex-col items-center text-center group cursor-pointer transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:border-tertiary/40">
-                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 md:mb-6 group-hover:bg-tertiary/20 transition-colors">
-                                    <span className="material-symbols-outlined text-2xl md:text-3xl text-tertiary" data-icon="auto_awesome">auto_awesome</span>
+                            <button onClick={() => handleIntentClick('anniversary')} className="glass-card p-5 md:p-8 rounded-2xl flex flex-col items-center text-center group cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:border-tertiary/40 active:scale-95">
+                                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-surface-container flex items-center justify-center mb-3 md:mb-6 group-hover:bg-tertiary/20 transition-colors">
+                                    <span className="material-symbols-outlined text-xl md:text-3xl text-tertiary" data-icon="auto_awesome">auto_awesome</span>
                                 </div>
-                                <h3 className="font-headline text-lg md:text-xl text-on-surface font-light mb-1 md:mb-2">纪念一个时刻</h3>
-                                <p className="text-xs md:text-sm text-on-surface-variant font-light">留住那份珍贵的喜悦</p>
+                                <h3 className="font-headline text-base md:text-xl text-on-surface font-light mb-1 md:mb-2">纪念一个时刻</h3>
+                                <p className="text-[10px] md:text-sm text-on-surface-variant font-light opacity-80">留住珍贵的喜悦</p>
                             </button>
-                            <button onClick={() => handleIntentClick('memory')} className="glass-card p-6 md:p-8 rounded-xl flex flex-col items-center text-center group cursor-pointer transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:border-primary-container/40">
-                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 md:mb-6 group-hover:bg-primary-container/20 transition-colors">
-                                    <span className="material-symbols-outlined text-2xl md:text-3xl text-primary-container" data-icon="cloud">cloud</span>
+                            <button onClick={() => handleIntentClick('memory')} className="glass-card p-5 md:p-8 rounded-2xl flex flex-col items-center text-center group cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:border-primary-container/40 active:scale-95">
+                                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-surface-container flex items-center justify-center mb-3 md:mb-6 group-hover:bg-primary-container/20 transition-colors">
+                                    <span className="material-symbols-outlined text-xl md:text-3xl text-primary-container" data-icon="cloud">cloud</span>
                                 </div>
-                                <h3 className="font-headline text-lg md:text-xl text-on-surface font-light mb-1 md:mb-2">记录一段回忆</h3>
-                                <p className="text-xs md:text-sm text-on-surface-variant font-light">珍藏那些心动的瞬间</p>
+                                <h3 className="font-headline text-base md:text-xl text-on-surface font-light mb-1 md:mb-2">记录一段回忆</h3>
+                                <p className="text-[10px] md:text-sm text-on-surface-variant font-light opacity-80">珍藏心动的瞬间</p>
                             </button>
-                            <button onClick={() => handleIntentClick('diary')} className="glass-card p-6 md:p-8 rounded-xl flex flex-col items-center text-center group cursor-pointer transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:border-on-surface-variant/40 sm:col-span-2 md:col-span-1">
-                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 md:mb-6 group-hover:bg-on-surface-variant/20 transition-colors">
-                                    <span className="material-symbols-outlined text-2xl md:text-3xl text-on-surface-variant" data-icon="dark_mode">dark_mode</span>
+                            <button onClick={() => handleIntentClick('diary')} className="glass-card p-5 md:p-8 rounded-2xl flex flex-col items-center text-center group cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:border-on-surface-variant/40 col-span-2 lg:col-span-1 active:scale-95">
+                                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-surface-container flex items-center justify-center mb-3 md:mb-6 group-hover:bg-on-surface-variant/20 transition-colors">
+                                    <span className="material-symbols-outlined text-xl md:text-3xl text-on-surface-variant" data-icon="dark_mode">dark_mode</span>
                                 </div>
-                                <h3 className="font-headline text-lg md:text-xl text-on-surface font-light mb-1 md:mb-2">随便写写心情</h3>
-                                <p className="text-xs md:text-sm text-on-surface-variant font-light">记录这一刻最真实的感触</p>
+                                <h3 className="font-headline text-base md:text-xl text-on-surface font-light mb-1 md:mb-2">写写心情</h3>
+                                <p className="text-[10px] md:text-sm text-on-surface-variant font-light opacity-80">记录真实的感触</p>
                             </button>
                         </div>
                     </main>
                 </div>
 
                 {/* ─── SCREEN 1: Scene Selection Options ─── */}
-                <div className="w-full h-[100dvh] shrink-0 pt-24 pb-48 flex flex-col relative z-20 overflow-y-auto custom-scrollbar">
+                <div className="w-full h-[100dvh] shrink-0 pt-20 pb-48 flex flex-col relative z-20 overflow-y-auto custom-scrollbar">
 
-                    <main className="flex-grow flex flex-col items-center justify-start px-6 md:px-12 max-w-5xl mx-auto w-full">
+                    <main className="flex-grow flex flex-col items-center justify-start px-5 md:px-12 max-w-5xl mx-auto w-full">
                         <header className="text-center mb-10 md:mb-16 space-y-4 md:space-y-6">
                             <h2 className="font-headline text-2xl md:text-5xl lg:text-6xl font-light tracking-tight text-on-surface opacity-90 transition-all">
                                 {currentIntent.title}
@@ -263,7 +263,7 @@ export default function Home() {
                 {/* ─── SCREEN 2: Template Recommendations ─── */}
                 <div className="w-full h-[100dvh] shrink-0 pt-24 pb-48 flex flex-col relative z-20 overflow-y-auto custom-scrollbar">
 
-                    <main className="flex-grow flex flex-col items-center justify-start px-8 max-w-[1600px] mx-auto w-full">
+                    <main className="flex-grow flex flex-col items-center justify-start px-5 max-w-[1600px] mx-auto w-full">
                         
                         <section className="mb-12 md:mb-16 w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
                             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -335,12 +335,12 @@ export default function Home() {
             </div>
 
             {/* Fixed Floating Action Bar (Screens 1 & 2) */}
-            <div className={`fixed bottom-[140px] md:bottom-[100px] left-0 w-full z-40 pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] transform ${activeScreen > 0 && activeScreen < 3 ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-                <div className="w-full max-w-[1600px] mx-auto px-6 md:px-12 flex justify-between items-center pointer-events-auto">
+            <div className={`fixed bottom-[130px] md:bottom-[100px] left-0 w-full z-40 pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] transform ${activeScreen > 0 && activeScreen < 3 ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+                <div className="w-full max-w-[1600px] mx-auto px-5 md:px-12 flex justify-between items-center pointer-events-auto">
                     <button 
                         onClick={() => setActiveScreen(Math.max(0, activeScreen - 1))}
                         disabled={activeScreen === 0}
-                        className={`group flex items-center justify-center gap-2 text-on-surface hover:text-white transition-all font-headline font-light tracking-widest px-6 py-3 md:px-8 md:py-3.5 cursor-pointer rounded-full bg-surface-container-high/60 hover:bg-surface-container-highest border border-outline-variant/20 backdrop-blur-xl shadow-lg shadow-black/20 text-sm md:text-base disabled:opacity-0 disabled:cursor-not-allowed`}
+                        className={`group hide-on-keyboard flex items-center justify-center gap-2 text-on-surface hover:text-white transition-all font-headline font-light tracking-widest px-6 py-3 md:px-8 md:py-3.5 cursor-pointer rounded-full bg-surface-container-high/60 hover:bg-surface-container-highest border border-outline-variant/20 backdrop-blur-xl shadow-lg shadow-black/20 text-sm md:text-base disabled:opacity-0 disabled:cursor-not-allowed`}
                     >
                         <span className="material-symbols-outlined text-base md:text-lg group-hover:-translate-x-1 transition-transform">arrow_back</span>
                         上一步

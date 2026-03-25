@@ -852,7 +852,7 @@ export default function Builder() {
                         {activeTab === 'publish' && (
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300 pb-10">
                                 <header className="flex justify-between items-center mb-6">
-                                    <h3 className="font-headline text-2xl font-light text-on-surface">发布 & 设置</h3>
+                                    <h3 className="font-headline text-2xl font-light text-on-surface">发布</h3>
                                     <span className="material-symbols-outlined text-primary">rocket_launch</span>
                                 </header>
 
@@ -932,7 +932,7 @@ export default function Builder() {
                         className={`flex flex-col items-center justify-center p-2 px-6 rounded-2xl transition-all ${activeTab === 'publish' ? 'bg-primary/20 text-primary' : 'text-on-surface-variant/60'}`}
                     >
                         <span className="material-symbols-outlined" style={{ fontVariationSettings: `'FILL' ${activeTab === 'publish' ? 1 : 0}` }}>rocket_launch</span>
-                        <span className="text-[10px] tracking-wide uppercase mt-1">发布 & 设置</span>
+                        <span className="text-[10px] tracking-wide uppercase mt-1">发布</span>
                     </button>
                 </nav>
             </div>
