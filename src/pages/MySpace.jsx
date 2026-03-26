@@ -3,7 +3,8 @@ import { Link, useNavigate, NavLink } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext.jsx';
 import { supabase } from '../lib/supabase.js';
-import { getUserStatus } from '../api/client.js';
+import { getUserStatus, listTemplates } from '../api/client.js';
+import PosterModal from '../components/PosterModal.jsx';
 
 const BASE_DOMAIN = import.meta.env.VITE_BASE_DOMAIN || 'moodspace.xyz';
 
@@ -31,9 +32,14 @@ export default function MySpace() {
     const navigate = useNavigate();
     const [projects, setProjects] = useState([]);
     const [loadingProjects, setLoadingProjects] = useState(true);
+    const [templateRegistry, setTemplateRegistry] = useState({});
     const [generatingCode, setGeneratingCode] = useState(false);
     const [localInviteCode, setLocalInviteCode] = useState(null);
     const [viewMode, setViewMode] = useState('grid');
+    const [editingSubdomain, setEditingSubdomain] = useState(null);
+    const [tempTitle, setTempTitle] = useState('');
+    const [posterProject, setPosterProject] = useState(null); // { url, title, templateTitle }
+    const [rawHtml, setRawHtml] = useState(''); // New state for raw HTML content
     const [status, setStatusState] = useState(() => {
         const cached = localStorage.getItem('rs_status');
         if (cached) {
@@ -89,7 +95,7 @@ export default function MySpace() {
         if (!user) return;
         supabase
             .from('projects')
-            .select('subdomain, template_type, created_at, updated_at')
+            .select('subdomain, template_type, created_at, updated_at, data')
             .eq('user_id', user.id)
             .order('updated_at', { ascending: false })
             .then(({ data, error }) => {
@@ -98,6 +104,19 @@ export default function MySpace() {
                 setLoadingProjects(false);
             });
     }, [user]);
+
+    // Fetch template registry for dynamic name mapping
+    useEffect(() => {
+        listTemplates().then(res => {
+            if (res.templates) {
+                const map = {};
+                res.templates.forEach(t => {
+                    map[t.name] = t.title || t.name;
+                });
+                setTemplateRegistry(map);
+            }
+        }).catch(err => console.error('[Template Registry Error]', err));
+    }, []);
 
     // Load user quota status from backend
     // L6.7 Sync status whenever profile tier or expiry changes (Realtime reactive)
@@ -158,6 +177,26 @@ export default function MySpace() {
         }
     }
 
+    async function handleUpdateTitle(subdomain, currentData) {
+        if (!tempTitle.trim()) {
+            setEditingSubdomain(null);
+            return;
+        }
+        
+        const { error } = await supabase
+            .from('projects')
+            .update({ data: { ...currentData, title: tempTitle } })
+            .eq('subdomain', subdomain);
+            
+        if (error) {
+            toast.error('修改失败: ' + error.message);
+        } else {
+            setProjects(prev => prev.map(p => p.subdomain === subdomain ? { ...p, data: { ...p.data, title: tempTitle } } : p));
+            toast.success('已更新项目备注');
+        }
+        setEditingSubdomain(null);
+    }
+
     if (loading || !user) {
         return (
             <div className="spinner-wrap">
@@ -213,21 +252,22 @@ export default function MySpace() {
                                     setNewNickname(profile?.display_name || '');
                                     setIsEditingNickname(true);
                                 }}>
-                                    <h1 className="text-2xl font-headline font-semibold tracking-tight text-on-surface">{profile?.display_name || '探索者'}</h1>
+                                    <h1 className="text-2xl lg:text-3xl font-headline font-semibold tracking-tight text-on-surface">{profile?.display_name || '探索者'}</h1>
                                     <span className="material-symbols-outlined text-sm text-on-surface-variant opacity-0 group-hover/nickname:opacity-100 transition-opacity" title="修改昵称">edit</span>
                                 </div>
                             )}
                             
-                            <div className="px-3 py-0.5 bg-primary/20 text-primary-dim rounded-full text-[10px] font-bold border border-primary/30 uppercase tracking-widest mb-4">
+                            <div className="px-4 py-1.5 bg-primary/20 text-primary-dim rounded-full text-xs font-bold border border-primary/30 uppercase tracking-widest mb-4">
                                 {status.label || profile?.tier?.toUpperCase() || 'FREE'}
                             </div>
 
-                            <p className="text-on-surface-variant font-light text-xs italic">
+                            <p className="text-on-surface-variant font-medium text-sm lg:text-base mb-6">
                                 {user.email}
                             </p>
                             
-                            <button className="mt-6 text-xs text-error/80 hover:text-error border border-error/20 hover:bg-error/10 px-4 py-1.5 rounded-full transition-colors flex items-center gap-1" onClick={handleSignOut}>
-                                <span className="material-symbols-outlined text-[14px]">logout</span>退出登录
+                            <button className="w-full py-4 bg-surface-container-high hover:bg-error/10 text-on-surface-variant hover:text-error rounded-2xl transition-all border border-outline-variant/20 flex items-center justify-center gap-3 group/logout cursor-pointer shadow-sm hover:shadow-md" onClick={handleSignOut}>
+                                <span className="material-symbols-outlined text-2xl group-hover/logout:rotate-12 transition-transform">logout</span>
+                                <span className="font-bold tracking-widest uppercase text-sm">退出网站登录</span>
                             </button>
                         </div>
 
@@ -310,14 +350,14 @@ export default function MySpace() {
                                                 className="text-xs bg-secondary-container px-3 py-1.5 rounded text-on-secondary-container font-bold hover:brightness-110 active:scale-95 transition-all cursor-pointer">复制链接</button>
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="p-3 bg-surface-container-high/40 rounded-xl border border-outline-variant/10 text-center flex flex-col justify-center">
-                                            <p className="text-xs text-on-surface-variant mb-0.5 leading-none">已邀请</p>
-                                            <p className="text-xl font-headline font-bold text-on-surface leading-none mt-1">{inviteCount} <span className="text-xs font-light">位</span></p>
+                                    <div className="flex flex-row gap-3">
+                                        <div className="flex-1 p-3 bg-surface-container-high/40 rounded-xl border border-outline-variant/10 text-center flex flex-col justify-center shadow-sm">
+                                            <p className="text-[10px] text-on-surface-variant mb-0.5 leading-none opacity-70">成功邀请</p>
+                                            <p className="text-xl font-headline font-bold text-on-surface leading-none mt-1">{inviteCount} <span className="text-[10px] font-normal">位</span></p>
                                         </div>
-                                        <div className="p-3 bg-surface-container-high/40 rounded-xl border border-outline-variant/10 text-center flex flex-col justify-center">
-                                            <p className="text-xs text-on-surface-variant mb-0.5 leading-none">额外额度</p>
-                                            <p className="text-xl font-headline font-bold text-on-surface leading-none mt-1">+{inviteCount} <span className="text-xs font-light">空间</span></p>
+                                        <div className="flex-1 p-3 bg-surface-container-high/40 rounded-xl border border-outline-variant/10 text-center flex flex-col justify-center shadow-sm">
+                                            <p className="text-[10px] text-on-surface-variant mb-0.5 leading-none opacity-70">奖励额度</p>
+                                            <p className="text-xl font-headline font-bold text-primary leading-none mt-1">+{inviteCount} <span className="text-[10px] font-normal">PAGES</span></p>
                                         </div>
                                     </div>
                                 </div>
@@ -377,7 +417,7 @@ export default function MySpace() {
 
                                         if (isLocked) {
                                             return (
-                                                <div key={p.subdomain} className={`glass-card bg-surface-container-low/40 rounded-lg overflow-hidden relative group border border-outline-variant/10 ${viewMode === 'grid' ? 'h-[280px] flex-col' : 'h-32 flex-row'}`}>
+                                                <div key={p.subdomain} className={`glass-card bg-surface-container-low/40 rounded-lg overflow-hidden relative group border border-outline-variant/10 flex ${viewMode === 'grid' ? 'min-h-[260px] flex-col' : 'min-h-[112px] flex-row'}`}>
                                                     <div className="absolute inset-0 bg-surface-container-lowest/80 backdrop-blur-[2px] z-10 flex flex-col md:flex-row items-center justify-center text-center p-6 gap-4">
                                                         <div className="w-12 h-12 rounded-full bg-error-container/20 flex items-center justify-center border border-error/20 flex-shrink-0">
                                                             <span className="material-symbols-outlined text-error text-2xl">lock</span>
@@ -402,23 +442,55 @@ export default function MySpace() {
                                         }
 
                                         return (
-                                            <div key={p.subdomain} className={`glass-card bg-surface-container-low/40 rounded-2xl overflow-hidden group ${borderColorClass} transition-all flex border border-outline-variant/10 shadow-lg shadow-black/20 ${viewMode === 'grid' ? 'flex-col h-[220px] lg:h-[280px]' : 'flex-row h-28 lg:h-32 items-stretch'} active:scale-[0.98]`}>
-                                                <div className={`relative bg-surface-container-highest overflow-hidden shrink-0 ${viewMode === 'grid' ? 'h-24 lg:h-32 w-full' : 'w-32 lg:w-40 h-full'}`}>
+                                            <div key={p.subdomain} className={`glass-card bg-surface-container-low/40 rounded-2xl overflow-hidden group ${borderColorClass} transition-all flex border border-outline-variant/10 shadow-lg shadow-black/20 ${viewMode === 'grid' ? 'flex-col min-h-[250px] lg:h-[280px]' : 'flex-row min-h-[112px] lg:h-32 items-stretch'} active:scale-[0.98]`}>
+                                                <div className={`relative bg-surface-container-highest overflow-hidden shrink-0 ${viewMode === 'grid' ? 'h-24 lg:h-32 w-full' : 'w-24 lg:w-40 h-full'}`}>
                                                     <div className={`absolute inset-0 bg-gradient-to-br ${gradientClass} group-hover:scale-110 transition-transform duration-700`}></div>
                                                     <div className="absolute inset-0 flex items-center justify-center shadow-sm">
                                                         <span className={`material-symbols-outlined ${textClass} text-4xl bg-black/30 backdrop-blur-md p-3 rounded-2xl border border-white/10`}>{iconStr}</span>
                                                     </div>
-                                                    <div className="absolute top-3 right-3 px-2 py-0.5 bg-green-500/10 text-green-400 text-xs rounded border border-green-500/20 uppercase font-bold tracking-tighter backdrop-blur-md">Live</div>
+                                                    <div className="absolute top-3 right-3 px-2 py-0.5 bg-green-500/10 text-green-400 text-[10px] rounded border border-green-500/20 uppercase font-bold tracking-tighter backdrop-blur-md">Live</div>
                                                 </div>
-                                                <div className={`p-5 flex flex-col flex-1 justify-between ${viewMode === 'list' && 'py-4'}`}>
+                                                <div className={`p-4 lg:p-5 flex flex-col flex-1 justify-between ${viewMode === 'list' && 'py-3'}`}>
                                                     <div className="overflow-hidden">
-                                                        <h4 className="text-lg lg:text-xl font-headline font-semibold mb-0.5 text-on-surface truncate">
-                                                            {TEMPLATE_NAMES[p.template_type] || p.template_type}
-                                                        </h4>
-                                                        <p className="text-xs lg:text-sm text-on-surface-variant truncate block w-full tracking-wide">{p.subdomain}.{BASE_DOMAIN}</p>
+                                                        {editingSubdomain === p.subdomain ? (
+                                                            <div className="flex items-center gap-2 w-full">
+                                                                <input 
+                                                                    autoFocus
+                                                                    value={tempTitle}
+                                                                    onChange={(e) => setTempTitle(e.target.value)}
+                                                                    onKeyDown={(e) => e.key === 'Enter' && handleUpdateTitle(p.subdomain, p.data)}
+                                                                    className="bg-surface-variant/20 border-b border-primary text-sm lg:text-base font-semibold py-0.5 px-2 flex-1 focus:outline-none text-on-surface rounded-t"
+                                                                />
+                                                                <button title="确认" className="text-primary hover:text-primary-dim cursor-pointer p-1" onClick={() => handleUpdateTitle(p.subdomain, p.data)}>
+                                                                    <span className="material-symbols-outlined text-lg">check</span>
+                                                                </button>
+                                                                <button title="取消" className="text-on-surface-variant hover:text-on-surface cursor-pointer p-1" onClick={() => setEditingSubdomain(null)}>
+                                                                    <span className="material-symbols-outlined text-lg">close</span>
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <h4 
+                                                                onClick={() => {
+                                                                    setEditingSubdomain(p.subdomain);
+                                                                    setTempTitle(p.data?.title || '未命名网页');
+                                                                }}
+                                                                className="text-lg lg:text-xl font-headline font-semibold mb-0.5 text-on-surface truncate flex items-center gap-2 cursor-pointer hover:text-primary transition-colors"
+                                                            >
+                                                                {p.data?.title || '未命名网页'}
+                                                                <span className="material-symbols-outlined text-sm opacity-0 group-hover:opacity-40 transition-opacity">edit</span>
+                                                            </h4>
+                                                        )}
+                                                        <div className="flex items-center gap-2 mb-1.5">
+                                                            <span className="px-1.5 py-0.5 rounded bg-surface-variant text-[10px] text-on-surface-variant border border-outline-variant/20">
+                                                                {templateRegistry[p.template_type] || TEMPLATE_NAMES[p.template_type] || p.template_type}
+                                                            </span>
+                                                            <p className="text-[10px] lg:text-xs text-on-surface-variant truncate tracking-wide opacity-60 font-mono">
+                                                                {p.subdomain}.{BASE_DOMAIN}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div className={`flex items-center justify-between border-t border-outline-variant/10 shrink-0 ${viewMode === 'grid' ? 'mt-4 pt-4' : 'mt-2 pt-2'}`}>
-                                                        <div className="flex gap-2">
+                                                    <div className={`flex items-center justify-between border-t border-outline-variant/10 shrink-0 ${viewMode === 'grid' ? 'mt-3 pt-3' : 'mt-2 pt-2'}`}>
+                                                        <div className="flex gap-1.5 md:gap-2 flex-wrap">
                                                             <a href={url} target="_blank" rel="noopener noreferrer" className={`w-9 h-9 rounded-full flex items-center justify-center bg-surface-container-high/60 ${hoverBgTextClass} text-on-surface-variant transition-colors border border-outline-variant/5`} title="在新标签页中访问">
                                                                 <span className="material-symbols-outlined text-lg">visibility</span>
                                                             </a>
@@ -430,11 +502,27 @@ export default function MySpace() {
                                                                     navigator.clipboard.writeText(url);
                                                                     toast.success('已复制专属网址！');
                                                                 }}
-                                                                className={`w-8 h-8 lg:w-9 lg:h-9 rounded-full flex items-center justify-center bg-surface-container-high/60 ${hoverBgTextClass} text-on-surface-variant transition-colors border border-outline-variant/5 cursor-pointer`} title="复制链接">
-                                                                <span className="material-symbols-outlined text-base lg:text-lg">share</span>
+                                                                className={`w-9 h-9 rounded-full flex items-center justify-center bg-surface-container-high/60 ${hoverBgTextClass} text-on-surface-variant transition-colors border border-outline-variant/5 cursor-pointer`} title="复制链接">
+                                                                <span className="material-symbols-outlined text-lg">share</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    const title = p.data?.title || '未命名网页';
+                                                                    const templateTitle = templateRegistry[p.template_type] || TEMPLATE_NAMES[p.template_type] || p.template_type;
+                                                                    setPosterProject({ url, title, templateTitle, rawHtml: '' });
+                                                                    
+                                                                    // We fetch the BASE template HTML from assets (which has CORS enabled) 
+                                                                    // instead of the live user subdomain (which lacks CORS headers).
+                                                                    fetch(`https://www.moodspace.xyz/assets/${p.template_type}/index.html`)
+                                                                        .then(res => res.text())
+                                                                        .then(html => setPosterProject(prev => prev && prev.url === url ? { ...prev, rawHtml: html } : prev))
+                                                                        .catch(err => console.error('Failed to fetch base template HTML for poster preview', err));
+                                                                }}
+                                                                className="w-9 h-9 rounded-full flex items-center justify-center bg-surface-container-high/60 hover:bg-primary/20 hover:text-primary text-on-surface-variant transition-colors border border-outline-variant/5 cursor-pointer" title="分享海报">
+                                                                <span className="material-symbols-outlined text-lg">image</span>
                                                             </button>
                                                         </div>
-                                                        <div className="text-[10px] lg:text-xs text-on-surface-variant/70 font-medium">
+                                                        <div className="text-[10px] text-on-surface-variant/70 font-medium hidden sm:block">
                                                             {new Date(p.updated_at || p.created_at).toLocaleDateString('zh-CN')}
                                                         </div>
                                                     </div>
@@ -487,6 +575,15 @@ export default function MySpace() {
 
                 </div>
             </main>
+
+            <PosterModal
+                isOpen={!!posterProject}
+                onClose={() => setPosterProject(null)}
+                projectUrl={posterProject?.url}
+                title={posterProject?.title}
+                templateTitle={posterProject?.templateTitle}
+                rawHtml={posterProject?.rawHtml}
+            />
         </div>
     );
 }

@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { listTemplates } from '../api/client.js';
 import { INTENT_DATA } from '../data/intents.js';
+import PosterModal from '../components/PosterModal.jsx';
 
 export default function Gallery() {
     const location = useLocation();
@@ -14,6 +15,7 @@ export default function Gallery() {
     const [templates, setTemplates] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [posterTemplate, setPosterTemplate] = useState(null);
 
     // Fetch and enrich templates
     useEffect(() => {
@@ -162,9 +164,13 @@ export default function Gallery() {
                                     )}
                                     <div className="flex items-start justify-between mb-3 z-10 relative">
                                         <h4 className="text-xl lg:text-2xl font-headline text-on-surface font-medium pr-4">{template.title || template.name}</h4>
-                                        <span className={`material-symbols-outlined text-2xl lg:text-3xl opacity-80 ${isPro ? 'text-secondary-dim' : 'text-primary-dim'}`}>
-                                            {template.icon}
-                                        </span>
+                                        <div className="flex shrink-0 items-center">
+                                            {isPro ? (
+                                                <span className="bg-secondary/10 text-secondary-dim text-[11px] px-2.5 py-1 rounded-md font-bold tracking-wider uppercase border border-secondary/20">PRO</span>
+                                            ) : (
+                                                <span className="bg-emerald-500/10 text-emerald-400 text-[11px] px-2.5 py-1 rounded-md font-bold tracking-wider uppercase border border-emerald-500/20">FREE</span>
+                                            )}
+                                        </div>
                                     </div>
                                     <p className="text-on-surface-variant text-sm lg:text-base mb-6 line-clamp-2 leading-relaxed flex-1 z-10 relative">
                                         {template.desc || '精美的响应式网页模板，为你的表达增添专属色彩。'}
@@ -181,7 +187,7 @@ export default function Gallery() {
                                     <div className="mt-auto pt-5 flex flex-wrap gap-4 items-center justify-between border-t border-outline-variant/10 z-10 relative">
                                         <div className="flex items-center gap-3 w-full sm:w-auto">
                                             <button 
-                                                onClick={() => navigate(`/builder/${template.name}`, { state: location.state })}
+                                                onClick={() => navigate(`/builder/${template.name}`, { state: { ...location.state, from: 'gallery' } })}
                                                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary/20 hover:bg-primary/30 border border-primary/30 text-primary-fixed transition-colors text-sm font-semibold group-hover:text-white"
                                             >
                                                 制作同款
@@ -195,13 +201,25 @@ export default function Gallery() {
                                             >
                                                 <span className="material-symbols-outlined text-sm">open_in_new</span>
                                             </a>
+                                            <button
+                                                onClick={() => {
+                                                    const url = `https://www.moodspace.xyz/preview/${template.name}`;
+                                                    const title = template.title || template.name;
+                                                    setPosterTemplate({ url, title, rawHtml: '' });
+                                                    
+                                                    // Fetch raw HTML of the template for the poster preview
+                                                    fetch(`https://www.moodspace.xyz/assets/${template.name}/index.html`)
+                                                        .then(res => res.text())
+                                                        .then(html => setPosterTemplate(prev => prev && prev.url === url ? { ...prev, rawHtml: html } : prev))
+                                                        .catch(err => console.error('Failed to fetch template HTML', err));
+                                                }}
+                                                className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2.5 rounded-xl border border-outline-variant/20 hover:bg-surface-variant text-on-surface-variant transition-colors text-sm font-medium"
+                                                title="分享海报"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">image</span>
+                                            </button>
                                         </div>
                                         <div className="flex gap-2">
-                                            {isPro ? (
-                                                <span className="bg-secondary/10 text-secondary-dim text-[10px] px-2 py-1 rounded-md font-bold tracking-wider uppercase border border-secondary/20">PRO</span>
-                                            ) : (
-                                                <span className="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-1 rounded-md font-bold tracking-wider uppercase border border-emerald-500/20">FREE</span>
-                                            )}
                                         </div>
                                     </div>
                                     
@@ -213,6 +231,15 @@ export default function Gallery() {
                     </div>
                 </main>
             </div>
+
+            <PosterModal
+                isOpen={!!posterTemplate}
+                onClose={() => setPosterTemplate(null)}
+                projectUrl={posterTemplate?.url}
+                title="模板预览"
+                templateTitle={posterTemplate?.title}
+                rawHtml={posterTemplate?.rawHtml}
+            />
         </div>
     );
 }

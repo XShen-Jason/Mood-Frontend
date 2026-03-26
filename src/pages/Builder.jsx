@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, useSearchParams, Link, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { listTemplates, renderProject, getConfigBySubdomain, getUserStatus, checkDomainAvailability } from '../api/client.js';
+import { listTemplates, renderProject, getConfigBySubdomain, getUserStatus, checkDomainAvailability, supabase } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import PosterModal from '../components/PosterModal.jsx';
 
 const BASE_DOMAIN = import.meta.env.VITE_BASE_DOMAIN || 'moodspace.xyz';
 
@@ -97,20 +98,26 @@ export default function Builder() {
     const [templates, setTemplates] = useState([]);
     const [selectedTemplate, setSelected] = useState(null);
     const [subdomain, setSubdomain] = useState('');
+    const [projectTitle, setProjectTitle] = useState('');
     const [fieldValues, setFieldValues] = useState({});
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
     const [result, setResult] = useState(null); // { url }
+    const [showPoster, setShowPoster] = useState(false);
     const [status, setStatus] = useState(null); // { dailyUsedEdits, maxDailyEdits }
     const [showViralFooter, setShowViralFooter] = useState(true);
 
     // BSR (Browser-Side Rendering) Raw HTML
     const [rawHtml, setRawHtml] = useState(null);
+    const [originalData, setOriginalData] = useState(null);
     const [initialDataLoaded, setInitialDataLoaded] = useState(false);
-    const iframeRef = useRef(null);
+    const desktopIframeRef = useRef(null);
+    const mobileIframeRef = useRef(null);
 
     const scrollToField = (key) => {
-        iframeRef.current?.contentWindow?.postMessage({ type: 'bsr-scroll', field: key }, '*');
+        const msg = { type: 'bsr-scroll', field: key };
+        desktopIframeRef.current?.contentWindow?.postMessage(msg, '*');
+        mobileIframeRef.current?.contentWindow?.postMessage(msg, '*');
     };
 
     // Domain Checker State
@@ -184,12 +191,20 @@ export default function Builder() {
                     setSubdomain(project.subdomain);
                     // Field values and footer
                     setFieldValues(project.data || {});
+                    setProjectTitle(project.data?.title || '');
                     setShowViralFooter(project.show_viral_footer !== false);
 
-                    // Template selection
                     if (templates.length > 0) {
                         const found = templates.find(t => t.name === project.template_type);
                         if (found) setSelected(found);
+                        
+                        // Capture original state for change detection (Only once)
+                        setOriginalData({
+                            fieldValues: project.data || {},
+                            projectTitle: project.data?.title || '未命名网页',
+                            showViralFooter: project.show_viral_footer !== false,
+                            templateName: project.template_type
+                        });
                     }
                     setInitialDataLoaded(true);
                 }
@@ -289,12 +304,56 @@ export default function Builder() {
         }
 
         setLoading(true);
+
+        // Quota Save: Check for actual changes in edit mode
+        if (editSubdomain && originalData) {
+            const currentTitle = projectTitle || '未命名网页';
+            const contentChanged = JSON.stringify(fieldValues) !== JSON.stringify(originalData.fieldValues);
+            const titleChanged = currentTitle !== originalData.projectTitle;
+            const footerChanged = showViralFooter !== originalData.showViralFooter;
+            const templateChanged = selectedTemplate?.name !== originalData.templateName;
+
+            const hasChanged = contentChanged || titleChanged || footerChanged || templateChanged;
+
+            if (!hasChanged) {
+                toast.error('内容未发生改变，无需更新 💡');
+                setLoading(false);
+                return;
+            }
+
+            // SMART UPDATE: If ONLY the memo title changed, do a direct DB update to save quota
+            if (titleChanged && !contentChanged && !footerChanged && !templateChanged) {
+                const toastId = toast.loading('正在更新项目备注...');
+                try {
+                    const { error } = await supabase
+                        .from('projects')
+                        .update({ data: { ...fieldValues, title: currentTitle } })
+                        .eq('subdomain', subdomain);
+
+                    if (error) throw error;
+
+                    setOriginalData(prev => ({ ...prev, projectTitle: currentTitle }));
+                    toast.success('项目备注已更新 (不消耗额度) ✨', { id: toastId });
+                    
+                    if (window.innerWidth < 1024) {
+                        setTimeout(() => navigate('/myspace'), 2000);
+                    }
+                    setLoading(false);
+                    return; 
+                } catch (err) {
+                    toast.error('备注更新失败: ' + err.message, { id: toastId });
+                    setLoading(false);
+                    return;
+                }
+            }
+        }
+
         const toastId = toast.loading(editSubdomain ? '正在更新您的浪漫网页...' : '正在为您全网生成中...');
         try {
             const response = await renderProject({
                 subdomain,
                 type: selectedTemplate.name,
-                data: fieldValues,
+                data: { ...fieldValues, title: projectTitle || '未命名网页' },
                 showViralFooter,
             });
 
@@ -305,6 +364,7 @@ export default function Builder() {
 
             const pageUrl = response.data?.url || `https://${subdomain}.${BASE_DOMAIN}/`;
             setResult({ url: pageUrl });
+            setShowPoster(false); // reset on new publish
 
             toast.success(
                 <div style={{ fontSize: '0.85rem' }}>
@@ -322,6 +382,11 @@ export default function Builder() {
 
             // Refresh status to update daily edit count
             getUserStatus(user.id).then(res => { if (res.success) setStatus(res.data); });
+
+            // Mobile-centric optimization: Return to dashboard after update
+            if (editSubdomain && window.innerWidth < 1024) {
+                setTimeout(() => navigate('/myspace'), 2000); // 2-second delay to let user see success
+            }
 
         } catch (err) {
             toast.error(err.message, { id: toastId });
@@ -421,11 +486,15 @@ export default function Builder() {
 
     // Effect to Push Real-time Updates to Iframe (No Reload)
     useEffect(() => {
-        if (iframeRef.current?.contentWindow) {
-            iframeRef.current.contentWindow.postMessage({
-                type: 'bsr-update',
-                values: fieldValues
-            }, '*');
+        const msg = {
+            type: 'bsr-update',
+            values: fieldValues
+        };
+        if (desktopIframeRef.current?.contentWindow) {
+            desktopIframeRef.current.contentWindow.postMessage(msg, '*');
+        }
+        if (mobileIframeRef.current?.contentWindow) {
+            mobileIframeRef.current.contentWindow.postMessage(msg, '*');
         }
     }, [fieldValues]);
 
@@ -588,6 +657,19 @@ export default function Builder() {
                                             );
                                         })}
 
+                                        {/* Project Memo Name */}
+                                        <div className="group pt-6 border-t border-outline-variant/10 shrink-0">
+                                            <label className="text-xs uppercase tracking-[0.2em] text-primary-dim/60 font-bold mb-3 block">项目备注名称 | Project Name</label>
+                                            <input 
+                                                type="text"
+                                                value={projectTitle}
+                                                onChange={(e) => setProjectTitle(e.target.value)}
+                                                placeholder="给这个网页起个名字（仅自己可见）"
+                                                className="w-full bg-transparent border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-lg font-light font-headline py-2 transition-all writing-area text-on-surface"
+                                            />
+                                            <p className="text-[10px] text-on-surface-variant mt-2 opacity-60">此名称仅用于在“我的空间”中管理，不会显示在实际发布的网页上。</p>
+                                        </div>
+
                                         {/* Viral Footer Toggle */}
                                         <div className="group pt-6 border-t border-outline-variant/10 shrink-0">
                                             <div className="flex justify-between items-start gap-4">
@@ -636,7 +718,7 @@ export default function Builder() {
                                     </div>
                                 ) : (
                                     <iframe
-                                        ref={iframeRef}
+                                        ref={desktopIframeRef}
                                         srcDoc={previewBaseHtml}
                                         style={{ width: '100%', height: '100%', border: 'none', background: '#000' }}
                                         title="Live Preview"
@@ -674,6 +756,17 @@ export default function Builder() {
                             <span>{loading ? (editSubdomain ? '全网刷新' : '宇宙级生成') : (editSubdomain ? '更新当前宇宙' : '点亮这片星空')}</span>
                             {!loading && <span className="material-symbols-outlined text-base md:text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>}
                         </button>
+
+                        {/* Poster button — appears after publish */}
+                        {result && (
+                            <button
+                                onClick={() => setShowPoster(true)}
+                                className="group flex items-center justify-center gap-2 text-secondary hover:text-secondary-container transition-all font-headline font-medium tracking-widest px-6 py-3 rounded-full bg-secondary/10 hover:bg-secondary/20 border border-secondary/30 backdrop-blur-xl shadow-lg shadow-secondary/20 text-sm pointer-events-auto"
+                            >
+                                <span className="material-symbols-outlined text-base group-hover:scale-110 transition-transform">image</span>
+                                生成分享海报
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -730,7 +823,7 @@ export default function Builder() {
                                 </div>
                             ) : (
                                 <iframe
-                                    ref={iframeRef}
+                                    ref={mobileIframeRef}
                                     srcDoc={previewBaseHtml}
                                     style={{ width: '100%', height: '100%', border: 'none', background: '#000' }}
                                     title="Mobile Live Preview"
@@ -876,24 +969,37 @@ export default function Builder() {
                                     </div>
                                 </div>
 
-                                <div className="relative group">
-                                    <label className="block text-[10px] text-primary tracking-widest uppercase mb-1 font-semibold">专属网址</label>
-                                    <div className="flex items-center gap-2 border-b-2 border-white/10 py-3">
+                                <div className="space-y-4">
+                                    <div className="relative group">
+                                        <label className="block text-[10px] text-primary tracking-widest uppercase mb-1 font-semibold">项目备注名称</label>
                                         <input
                                             type="text"
-                                            value={subdomain}
-                                            readOnly={!!editSubdomain}
-                                            onChange={(e) => !editSubdomain && setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                                            className="flex-1 bg-transparent border-0 p-0 text-xl text-on-surface focus:ring-0"
-                                            placeholder="xm-xh-520"
+                                            value={projectTitle}
+                                            onChange={(e) => setProjectTitle(e.target.value)}
+                                            className="w-full bg-transparent border-b-2 border-white/10 py-3 text-lg text-on-surface focus:ring-0 focus:border-primary"
+                                            placeholder="起个名字（仅自己可见）"
                                         />
-                                        <span className="text-on-surface-variant text-sm font-light">.{BASE_DOMAIN}</span>
                                     </div>
-                                    {!editSubdomain && domainStatus !== 'idle' && (
-                                        <div className={`text-[10px] mt-2 ${domainStatus === 'available' ? 'text-green-400' : 'text-error'}`}>
-                                            {domainMsg}
+
+                                    <div className="relative group">
+                                        <label className="block text-[10px] text-primary tracking-widest uppercase mb-1 font-semibold">专属网址</label>
+                                        <div className="flex items-center gap-2 border-b-2 border-white/10 py-3">
+                                            <input
+                                                type="text"
+                                                value={subdomain}
+                                                readOnly={!!editSubdomain}
+                                                onChange={(e) => !editSubdomain && setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                                                className="flex-1 bg-transparent border-0 p-0 text-xl text-on-surface focus:ring-0"
+                                                placeholder="xm-xh-520"
+                                            />
+                                            <span className="text-on-surface-variant text-sm font-light">.{BASE_DOMAIN}</span>
                                         </div>
-                                    )}
+                                        {!editSubdomain && domainStatus !== 'idle' && (
+                                            <div className={`text-[10px] mt-2 ${domainStatus === 'available' ? 'text-green-400' : 'text-error'}`}>
+                                                {domainMsg}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <button
@@ -903,6 +1009,16 @@ export default function Builder() {
                                 >
                                     {loading ? '正在生成宇宙...' : (editSubdomain ? '更新当前宇宙' : '点亮这片星空')}
                                 </button>
+
+                                {result && (
+                                    <button
+                                        onClick={() => setShowPoster(true)}
+                                        className="w-full py-4 rounded-2xl border border-secondary/30 bg-secondary/10 text-secondary font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">image</span>
+                                        生成分享海报
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>
@@ -940,6 +1056,15 @@ export default function Builder() {
             {/* Decorative Nebula Accents (Shared but hidden behind desktop/mobile sections) */}
             <div className="fixed top-1/4 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none z-[-1]"></div>
             <div className="fixed bottom-1/4 -left-24 w-80 h-80 bg-secondary/10 rounded-full blur-[100px] pointer-events-none z-[-1]"></div>
+            {/* Poster Modal */}
+            <PosterModal
+                isOpen={showPoster}
+                onClose={() => setShowPoster(false)}
+                projectUrl={result?.url}
+                title={projectTitle || '未命名网页'}
+                templateTitle={selectedTemplate?.title || selectedTemplate?.name}
+                rawHtml={rawHtml}
+            />
         </div>
     );
 }

@@ -1,82 +1,117 @@
 export const INTENT_DATA = {
-    confession: {
-        title: "有些话，说出口不容易",
-        subtitle: "你更接近哪一种情况？",
-        categoryLabel: "心动告白",
-        icon: "auto_awesome",
+    joy: {
+        title: "有些快乐，就该这样分享",
+        subtitle: "这份喜悦，你打算如何安放？",
+        categoryLabel: "开心 / 喜悦",
+        icon: "sentiment_very_satisfied",
         options: [
-            { text: "想对TA说点什么，但不知道怎么开口", helper: "那我们可以慢慢把它写下来" },
-            { text: "有些暗恋，不想继续藏着了", helper: "勇敢一点，给故事一个开始" },
-            { text: "只是想告诉TA，今天也很喜欢你", helper: "平淡日常里的直白心意" }
+            { id: 'send_to_them', text: "发送给TA", helper: "想把这份满溢的快乐，原封不动地传递给TA" },
+            { id: 'self_record', text: "记录自我", helper: "把此刻的灿烂写进日记，奖励未来的自己" },
+            { id: 'celebrate', text: "庆祝 / 纪念", helper: "标记这个时刻，让它在平淡生活中闪闪发光" },
+            { id: 'share', text: "分享 / 展示", helper: "整理成精美页面，在社交平台上展示给所有人" },
+            { id: 'explore', text: "探索模式", helper: "不想预设意图，先去看看有哪些有趣的模板" }
         ],
         templates: [
-            { id: 'starry_confession', name: '星空告白', icon: 'auto_awesome', desc: '在漫天星辰的见证下，诉说最真挚的心意。', color: 'primary' },
-            { id: 'love_letter', name: '情书时代', icon: 'favorite', desc: '干净纯粹的纸质书信风，字字句句皆是情深。', color: 'secondary' },
-            { id: 'neon_heart', name: '霓虹心跳', icon: 'monitor_heart', desc: '轻快明亮的赛博氛围，直白表达心底的悸动。', color: 'tertiary' }
+            { id: 'celebration_fireworks', name: '花火灿烂', icon: 'celebration', desc: '绚烂烟火，点燃快乐回忆。', color: 'secondary' },
+            { id: 'polaroid_wall', name: '拍立得影集', icon: 'photo_library', desc: '每一张合照都是一个心动的节点。', color: 'tertiary' },
+            { id: 'breeze_diary', name: '微风手账', icon: 'menu_book', desc: '留住那天的阳光与微风。', color: 'secondary' }
         ]
     },
-    apology: {
-        title: "想和好，却不知打破僵局",
-        subtitle: "这封信，希望是和解的开始。",
-        categoryLabel: "关系修复",
+    love: {
+        title: "最深的情感，最美的表达",
+        subtitle: "你心里的那份爱，现在是什么频率？",
+        categoryLabel: "爱 / 想念",
         icon: "favorite",
         options: [
-            { text: "对不起，那天是我态度不好", helper: "退一步，让关系重新呼吸" },
-            { text: "其实我还在乎你，不想冷战了", helper: "坦诚脆弱也是一种勇敢" },
-            { text: "惹你生气了，这该怎么办才好", helper: "低头不代表认输，代表珍惜" }
+            { id: 'send_to_them', text: "发送给TA", helper: "写给TA的一封信，有些话不便当面开口" },
+            { id: 'self_record', text: "记录自我", helper: "记录下爱意萌动的瞬间，这是属于我的秘密" },
+            { id: 'celebrate', text: "庆祝 / 纪念", helper: "属于我们的专属周年，值得最深刻的纪念" },
+            { id: 'share', text: "分享 / 展示", helper: "向世界展示我们的浪漫故事" },
+            { id: 'explore', text: "探索模式", helper: "寻觅更多表达爱意的新奇方式" }
         ],
         templates: [
-            { id: 'rainy_apology', name: '雨夜低语', icon: 'water_drop', desc: '滴答的雨声中，藏着最诚恳的歉意。', color: 'primary' },
-            { id: 'warm_light', name: '微光倾听', icon: 'wb_incandescent', desc: '像一盏深夜的暖光灯，等待关系重新回暖。', color: 'secondary' },
-            { id: 'broken_glass', name: '时光拼图', icon: 'extension', desc: '把破碎的情绪慢慢拾起，重新拼凑完整。', color: 'tertiary' }
+            { id: 'starry_confession', name: '星空告白', icon: 'auto_awesome', desc: '星空下的告白，最极致浪漫。', color: 'primary' },
+            { id: 'love_letter', name: '情书时代', icon: 'favorite', desc: '字字句句，皆是少年意气。', color: 'secondary' },
+            { id: 'neon_heart', name: '霓虹心跳', icon: 'monitor_heart', desc: '大胆跳动的心，直白的爱意。', color: 'tertiary' }
         ]
     },
-    anniversary: {
-        title: "每一个日子，都值得铭记",
-        subtitle: "回首一起走过的路...",
-        categoryLabel: "专属纪念日",
-        icon: "celebration",
+    guilt: {
+        title: "所有的裂痕，都是光照进来的地方",
+        subtitle: "想打破僵局，或许只需要一点点勇气。",
+        categoryLabel: "愧疚 / 道歉",
+        icon: "sentiment_dissatisfied",
         options: [
-            { text: "这是我们在一起的第N天", helper: "时间是最好的见证者" },
-            { text: "祝你生日快乐，我的唯一", helper: "把最好的祝福打包送给你" },
-            { text: "关于我们的专属纪念日", helper: "那些细微的日常，全都是浪漫" }
+            { id: 'send_to_them', text: "发送给TA", helper: "通过一个安静的页面，传递没能说出的对不起" },
+            { id: 'repair', text: "沟通 / 修复", helper: "希望能重申我的心意，给彼此一个和好的台阶" },
+            { id: 'self_record', text: "记录自我", helper: "记录下这次反思，以免在未来再次犯错" },
+            { id: 'self_heal', text: "自我疗愈", helper: "原谅那个不够完美的自己，重新出发" },
+            { id: 'explore', text: "探索模式", helper: "看看有没有更温和的方式，能化解此刻的尴尬" }
         ],
         templates: [
-            { id: 'golden_memories', name: '流金岁月', icon: 'hourglass_empty', desc: '用闪耀温暖的倒计时，记录你们共同的时间。', color: 'primary' },
-            { id: 'celebration_fireworks', name: '花火灿烂', icon: 'celebration', desc: '浪漫绚烂的烟火特效，点燃这个重要的日子。', color: 'secondary' },
-            { id: 'polaroid_wall', name: '拍立得影集', icon: 'photo_library', desc: '一张张滑过的相片，串联起所有的甜蜜瞬间。', color: 'tertiary' }
+            { id: 'rainy_apology', name: '雨夜低语', icon: 'water_drop', desc: '润物无声，诚意满分。', color: 'primary' },
+            { id: 'warm_light', name: '微光倾听', icon: 'wb_incandescent', desc: '在微光中等待对方的回应。', color: 'secondary' }
         ]
     },
-    memory: {
-        title: "时光太浅，回忆太深",
-        subtitle: "你想留下哪些珍贵的瞬间？",
-        categoryLabel: "时光回忆志",
-        icon: "history",
+    sadness: {
+        title: "每一段回忆，都有它的重量",
+        subtitle: "有些离别，是为了更好的怀念。",
+        categoryLabel: "伤感 / 回忆",
+        icon: "auto_stories",
         options: [
-            { text: "只是一次平凡却难忘的约会", helper: "因为是你，所以特别" },
-            { text: "一起去过的地方，看过的风景", helper: "照片会褪色，但记忆不会" },
-            { text: "关于我们的“第一次”合集", helper: "第一次牵手，第一次旅行..." }
+            { id: 'send_to_them', text: "发送给TA", helper: "最后的郑重道别，或者一段未完待续的回音" },
+            { id: 'self_record', text: "记录自我", helper: "珍藏那些美好的碎影，作为日后成长的慰藉" },
+            { id: 'self_heal', text: "自我疗愈", helper: "释放积压的情绪，在这片空间里彻底倾诉" },
+            { id: 'share', text: "分享 / 展示", helper: "祭奠一段情感，或者对往昔时光的一场致敬" },
+            { id: 'explore', text: "探索模式", helper: "在慢节奏的模板中，给情绪找一个出口" }
         ],
         templates: [
-            { id: 'vintage_film', name: '复古胶卷', icon: 'movie', desc: '老电影般的放映效果，让记忆隽永留存。', color: 'primary' },
-            { id: 'breeze_diary', name: '微风手账', icon: 'menu_book', desc: '清新自然的手账记录风格，留住那一天的阳光。', color: 'secondary' },
-            { id: 'constellation_map', name: '星轨连线', icon: 'share', desc: '每一个回忆都是一颗星，连成专属你们的星座。', color: 'tertiary' }
+            { id: 'vintage_film', name: '复古胶卷', icon: 'movie', desc: '泛黄的胶片，记录隽永的记忆。', color: 'primary' },
+            { id: 'broken_glass', name: '时光拼图', icon: 'extension', desc: '拼合碎片，重现模糊的过往。', color: 'tertiary' },
+            { id: 'sunset_glow', name: '落日余晖', icon: 'wb_twilight', desc: '温柔的黄昏，静谧的离场。', color: 'tertiary' }
         ]
     },
-    diary: {
-        title: "今天的心情，是什么颜色？",
-        subtitle: "随便写写，反正只有空间懂你。",
-        categoryLabel: "情绪碎碎念",
-        icon: "psychology",
+    stress: {
+        title: "慢下来，给心灵一个出口",
+        subtitle: "压力很大的时候，这里是你的秘密港湾。",
+        categoryLabel: "压力 / 焦虑",
+        icon: "nest_eco_leaf",
         options: [
-            { text: "今天有点累，但还是想记录下", helper: "给自己一个拥抱" },
-            { text: "遇到了一件很开心的小事", helper: "让快乐的保质期更长一点" },
-            { text: "此刻有点想念某个人", helper: "思念是一种无声的回音" }
+            { id: 'self_heal', text: "自我疗愈", helper: "通过文字将焦虑转化为平静，找回对生活的掌控感" },
+            { id: 'self_record', text: "记录自我", helper: "把烦恼都写下来，然后通通关在网页里" },
+            { id: 'share', text: "分享 / 展示", helper: "输出你的压力，或许能遇到同频共鸣的人" },
+            { id: 'explore', text: "探索模式", helper: "不想思考，只想随便逛逛，找点治愈的感觉" }
         ],
         templates: [
-            { id: 'minimal_white', name: '极简白纸', icon: 'check_box_outline_blank', desc: '没有任何打扰，只留下最纯粹的黑白文字。', color: 'primary' },
-            { id: 'lofi_room', name: 'Lofi 房间', icon: 'headphones', desc: '伴随白噪音与暗光，享受独处的倾诉感。', color: 'secondary' },
-            { id: 'sunset_glow', name: '落日余晖', icon: 'wb_twilight', desc: '像黄昏时的云彩一样，温柔包裹所有的思绪。', color: 'tertiary' }
+            { id: 'lofi_room', name: 'Lofi 房间', icon: 'headphones', desc: '伴随节拍，让情绪彻底放松。', color: 'secondary' },
+            { id: 'minimal_white', name: '极简白纸', icon: 'check_box_outline_blank', desc: '留白，给紧绷的神经透透气。', color: 'primary' }
         ]
+    },
+    calm: {
+        title: "于平淡中，发现温暖的力量",
+        subtitle: "心境平和的时候，你想记录些什么？",
+        categoryLabel: "平静 / 感谢",
+        icon: "spa",
+        options: [
+            { id: 'send_to_them', text: "发送给TA", helper: "向曾经给予过帮助的TA，道一声久违的感谢" },
+            { id: 'self_record', text: "记录自我", helper: "记下那些微小的美好，它们构成了生活的底色" },
+            { id: 'celebrate', text: "庆祝 / 纪念", helper: "简单而神圣地纪念此刻的内心平和" },
+            { id: 'share', text: "分享 / 展示", helper: "分享一种宁静的生活态度，传递正向能量" },
+            { id: 'explore', text: "探索模式", helper: "看看还有哪些极简风格，能衬托当下的心境" }
+        ],
+        templates: [
+            { id: 'constellation_map', name: '星轨连线', icon: 'share', desc: '每一颗星，代表一个感恩的瞬间。', color: 'tertiary' },
+            { id: 'minimal_white', name: '极简白纸', icon: 'check_box_outline_blank', desc: '平和的心境，简单的表达。', color: 'primary' }
+        ]
+    },
+    neutral: {
+        title: "开始一段，未定义的旅程",
+        subtitle: "不确定要去向何方？让我们先看看风景。",
+        categoryLabel: "探索 / 空白",
+        icon: "explore",
+        options: [
+            { id: 'explore', text: "探索模式", helper: "直接前往模板大厅，挑选你第一眼心动的风格" }
+        ],
+        templates: []
     }
 };
+

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase.js';
+export { supabase };
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 

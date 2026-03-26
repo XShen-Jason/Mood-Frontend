@@ -1,84 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { INTENT_DATA } from '../data/intents.js';
 
-const INTENT_DATA = {
-    confession: {
-        title: "有些话，说出口不容易",
-        subtitle: "你更接近哪一种情况？",
-        options: [
-            { text: "想对TA说点什么，但不知道怎么开口", helper: "那我们可以慢慢把它写下来" },
-            { text: "有些暗恋，不想继续藏着了", helper: "勇敢一点，给故事一个开始" },
-            { text: "只是想告诉TA，今天也很喜欢你", helper: "平淡日常里的直白心意" }
-        ],
-        templates: [
-            { id: 'starry_confession', name: '星空告白', icon: 'auto_awesome', desc: '在漫天星辰的见证下，诉说最真挚的心意。', color: 'primary' },
-            { id: 'love_letter', name: '情书时代', icon: 'favorite', desc: '干净纯粹的纸质书信风，字字句句皆是情深。', color: 'secondary' },
-            { id: 'neon_heart', name: '霓虹心跳', icon: 'monitor_heart', desc: '轻快明亮的赛博氛围，直白表达心底的悸动。', color: 'tertiary' }
-        ]
-    },
-    apology: {
-        title: "想和好，却不知打破僵局",
-        subtitle: "这封信，希望是和解的开始。",
-        options: [
-            { text: "对不起，那天是我态度不好", helper: "退一步，让关系重新呼吸" },
-            { text: "其实我还在乎你，不想冷战了", helper: "坦诚脆弱也是一种勇敢" },
-            { text: "惹你生气了，这该怎么办才好", helper: "低头不代表认输，代表珍惜" }
-        ],
-        templates: [
-            { id: 'rainy_apology', name: '雨夜低语', icon: 'water_drop', desc: '滴答的雨声中，藏着最诚恳的歉意。', color: 'primary' },
-            { id: 'warm_light', name: '微光倾听', icon: 'wb_incandescent', desc: '像一盏深夜的暖光灯，等待关系重新回暖。', color: 'secondary' },
-            { id: 'broken_glass', name: '时光拼图', icon: 'extension', desc: '把破碎的情绪慢慢拾起，重新拼凑完整。', color: 'tertiary' }
-        ]
-    },
-    anniversary: {
-        title: "每一个日子，都值得铭记",
-        subtitle: "回首一起走过的路...",
-        options: [
-            { text: "这是我们在一起的第N天", helper: "时间是最好的见证者" },
-            { text: "祝你生日快乐，我的唯一", helper: "把最好的祝福打包送给你" },
-            { text: "关于我们的专属纪念日", helper: "那些细微的日常，全都是浪漫" }
-        ],
-        templates: [
-            { id: 'golden_memories', name: '流金岁月', icon: 'hourglass_empty', desc: '用闪耀温暖的倒计时，记录你们共同的时间。', color: 'primary' },
-            { id: 'celebration_fireworks', name: '花火灿烂', icon: 'celebration', desc: '浪漫绚烂的烟火特效，点燃这个重要的日子。', color: 'secondary' },
-            { id: 'polaroid_wall', name: '拍立得影集', icon: 'photo_library', desc: '一张张滑过的相片，串联起所有的甜蜜瞬间。', color: 'tertiary' }
-        ]
-    },
-    memory: {
-        title: "时光太浅，回忆太深",
-        subtitle: "你想留下哪些珍贵的瞬间？",
-        options: [
-            { text: "只是一次平凡却难忘的约会", helper: "因为是你，所以特别" },
-            { text: "一起去过的地方，看过的风景", helper: "照片会褪色，但记忆不会" },
-            { text: "关于我们的“第一次”合集", helper: "第一次牵手，第一次旅行..." }
-        ],
-        templates: [
-            { id: 'vintage_film', name: '复古胶卷', icon: 'movie', desc: '老电影般的放映效果，让记忆隽永留存。', color: 'primary' },
-            { id: 'breeze_diary', name: '微风手账', icon: 'menu_book', desc: '清新自然的手账记录风格，留住那一天的阳光。', color: 'secondary' },
-            { id: 'constellation_map', name: '星轨连线', icon: 'share', desc: '每一个回忆都是一颗星，连成专属你们的星座。', color: 'tertiary' }
-        ]
-    },
-    diary: {
-        title: "今天的心情，是什么颜色？",
-        subtitle: "随便写写，反正只有空间懂你。",
-        options: [
-            { text: "今天有点累，但还是想记录下", helper: "给自己一个拥抱" },
-            { text: "遇到了一件很开心的小事", helper: "让快乐的保质期更长一点" },
-            { text: "此刻有点想念某个人", helper: "思念是一种无声的回音" }
-        ],
-        templates: [
-            { id: 'minimal_white', name: '极简白纸', icon: 'check_box_outline_blank', desc: '没有任何打扰，只留下最纯粹的黑白文字。', color: 'primary' },
-            { id: 'lofi_room', name: 'Lofi 房间', icon: 'headphones', desc: '伴随白噪音与暗光，享受独处的倾诉感。', color: 'secondary' },
-            { id: 'sunset_glow', name: '落日余晖', icon: 'wb_twilight', desc: '像黄昏时的云彩一样，温柔包裹所有的思绪。', color: 'tertiary' }
-        ]
-    }
-};
 
 export default function Home() {
     const navigate = useNavigate();
     const location = useLocation();
     const [activeScreen, setActiveScreen] = useState(location.state?.returnToStep || 0); // 0 = Hero, 1 = Scenes, 2 = Templates
-    const [selectedType, setSelectedType] = useState('confession');
+    const [selectedType, setSelectedType] = useState('joy');
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [customText, setCustomText] = useState('');
 
@@ -106,7 +35,20 @@ export default function Home() {
     };
 
     const handleNextToTemplates = () => {
-        // Validation mapping occurs automatically. Go to Screen 2.
+        const option = INTENT_DATA[selectedType].options[selectedIndex];
+        
+        // Handling redirects for 'explore' intent
+        if (option?.id === 'explore') {
+            navigate('/gallery', { state: { intent: selectedType } });
+            return;
+        }
+
+        // Special handling for neutral category if needed
+        if (selectedType === 'neutral' && option?.id === 'explore') {
+            navigate('/gallery');
+            return;
+        }
+
         setActiveScreen(2);
     };
 
@@ -162,42 +104,20 @@ export default function Home() {
                             </p>
                         </div>
                         
-                        <div className="w-full max-w-[1600px] px-5 grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-6 mb-16 leading-relaxed">
-                            <button onClick={() => handleIntentClick('confession')} className="glass-card p-5 md:p-8 rounded-2xl flex flex-col items-center text-center group cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:border-primary/40 active:scale-95">
-                                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-surface-container flex items-center justify-center mb-3 md:mb-6 group-hover:bg-primary/20 transition-colors">
-                                    <span className="material-symbols-outlined text-xl md:text-3xl text-primary" data-icon="mail">mail</span>
-                                </div>
-                                <h3 className="font-headline text-base md:text-xl text-on-surface font-light mb-1 md:mb-2">浪漫表白</h3>
-                                <p className="text-[10px] md:text-sm text-on-surface-variant font-light opacity-80">表达心底的想法</p>
-                            </button>
-                            <button onClick={() => handleIntentClick('apology')} className="glass-card p-5 md:p-8 rounded-2xl flex flex-col items-center text-center group cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:border-secondary/40 active:scale-95">
-                                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-surface-container flex items-center justify-center mb-3 md:mb-6 group-hover:bg-secondary/20 transition-colors">
-                                    <span className="material-symbols-outlined text-xl md:text-3xl text-secondary" data-icon="rebase_edit">rebase_edit</span>
-                                </div>
-                                <h3 className="font-headline text-base md:text-xl text-on-surface font-light mb-1 md:mb-2">想和TA和好</h3>
-                                <p className="text-[10px] md:text-sm text-on-surface-variant font-light opacity-80">修补脆弱的关系</p>
-                            </button>
-                            <button onClick={() => handleIntentClick('anniversary')} className="glass-card p-5 md:p-8 rounded-2xl flex flex-col items-center text-center group cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:border-tertiary/40 active:scale-95">
-                                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-surface-container flex items-center justify-center mb-3 md:mb-6 group-hover:bg-tertiary/20 transition-colors">
-                                    <span className="material-symbols-outlined text-xl md:text-3xl text-tertiary" data-icon="auto_awesome">auto_awesome</span>
-                                </div>
-                                <h3 className="font-headline text-base md:text-xl text-on-surface font-light mb-1 md:mb-2">纪念一个时刻</h3>
-                                <p className="text-[10px] md:text-sm text-on-surface-variant font-light opacity-80">留住珍贵的喜悦</p>
-                            </button>
-                            <button onClick={() => handleIntentClick('memory')} className="glass-card p-5 md:p-8 rounded-2xl flex flex-col items-center text-center group cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:border-primary-container/40 active:scale-95">
-                                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-surface-container flex items-center justify-center mb-3 md:mb-6 group-hover:bg-primary-container/20 transition-colors">
-                                    <span className="material-symbols-outlined text-xl md:text-3xl text-primary-container" data-icon="cloud">cloud</span>
-                                </div>
-                                <h3 className="font-headline text-base md:text-xl text-on-surface font-light mb-1 md:mb-2">记录一段回忆</h3>
-                                <p className="text-[10px] md:text-sm text-on-surface-variant font-light opacity-80">珍藏心动的瞬间</p>
-                            </button>
-                            <button onClick={() => handleIntentClick('diary')} className="glass-card p-5 md:p-8 rounded-2xl flex flex-col items-center text-center group cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:border-on-surface-variant/40 col-span-2 lg:col-span-1 active:scale-95">
-                                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-surface-container flex items-center justify-center mb-3 md:mb-6 group-hover:bg-on-surface-variant/20 transition-colors">
-                                    <span className="material-symbols-outlined text-xl md:text-3xl text-on-surface-variant" data-icon="dark_mode">dark_mode</span>
-                                </div>
-                                <h3 className="font-headline text-base md:text-xl text-on-surface font-light mb-1 md:mb-2">写写心情</h3>
-                                <p className="text-[10px] md:text-sm text-on-surface-variant font-light opacity-80">记录真实的感触</p>
-                            </button>
+                        <div className="w-full max-w-[1600px] px-5 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 md:gap-4 mb-16 leading-relaxed">
+                            {Object.entries(INTENT_DATA).map(([key, data]) => (
+                                <button 
+                                    key={key} 
+                                    onClick={() => handleIntentClick(key)} 
+                                    className="glass-card p-4 md:p-6 rounded-2xl flex flex-col items-center text-center group cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:border-primary/40 active:scale-95"
+                                >
+                                    <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-surface-container flex items-center justify-center mb-3 md:mb-4 group-hover:bg-primary/20 transition-colors">
+                                        <span className="material-symbols-outlined text-xl md:text-2xl text-primary">{data.icon}</span>
+                                    </div>
+                                    <h3 className="font-headline text-sm md:text-lg text-on-surface font-light mb-1">{data.categoryLabel}</h3>
+                                    <p className="text-[9px] md:text-xs text-on-surface-variant font-light opacity-80 line-clamp-1">{data.title}</p>
+                                </button>
+                            ))}
                         </div>
                     </main>
                 </div>
@@ -276,7 +196,7 @@ export default function Home() {
                                 <div className="space-y-4">
                                     <div className="flex flex-wrap gap-3">
                                         <span className="px-4 py-1.5 rounded-full text-xs font-medium bg-surface-container-high text-primary border border-primary/20">
-                                            意境：{selectedType === 'confession' ? '浪漫表白' : selectedType === 'apology' ? '想和TA和好' : selectedType === 'anniversary' ? '纪念一个时刻' : selectedType === 'memory' ? '记录一段回忆' : '随便写写心情'}
+                                            意境：{currentIntent.categoryLabel}
                                         </span>
                                         <span className="px-4 py-1.5 rounded-full text-xs font-medium bg-surface-container-high text-secondary border border-secondary/20 truncate max-w-[250px]">
                                             场景：{finalSelectedSceneText}
@@ -286,7 +206,7 @@ export default function Home() {
                                         我们为你准备了几种更适合的表达方式
                                     </h1>
                                     <p className="text-on-surface-variant max-w-2xl text-base md:text-lg leading-relaxed">
-                                        结合你的情感，这些专为 "{selectedType === 'confession' ? '告白' : '此刻'}" 打造的风格或许能帮你更好地表达。
+                                        结合你的情感，这些专为 "{currentIntent.categoryLabel}" 打造的风格或许能帮你更好地表达。
                                     </p>
                                 </div>
                             </div>

@@ -54,6 +54,10 @@ function Navbar() {
     if (window.innerWidth < 768 && location.pathname.startsWith('/builder')) {
         return null;
     }
+    // NEVER show the Global Navbar on the standalone Preview pages!
+    if (location.pathname.startsWith('/preview')) {
+        return null;
+    }
 
     async function handleSignOut() {
         await signOut();
@@ -202,6 +206,9 @@ function GlobalFooter() {
                 // Builder has fixed bottom elements, always keep it slim to prevent overlap
                 setIsSlim(true);
                 setIsHidden(false);
+            } else if (path.startsWith('/preview')) {
+                // Completely hide on standalone Preview pages to avoid overlaying the template
+                setIsHidden(true);
             } else {
                 // Other pages (Gallery, etc.) use window scroll context
                 setIsSlim(window.scrollY > 50);
