@@ -13,7 +13,8 @@ import {
     updateTemplateStatus,
     listPricingAdmin,
     upsertPricingConfig,
-    deletePricingConfig
+    deletePricingConfig,
+    syncTemplateMeta
 } from '../api/client.js';
 import { supabase } from '../lib/supabase.js';
 
@@ -29,6 +30,7 @@ export default function Admin() {
     const [loadingTemplates, setLoadingTemplates] = useState(false);
     const [loadingUpload, setLoadingUpload] = useState(false);
     const [loadingSync, setLoadingSync] = useState(false);
+    const [loadingSyncMeta, setLoadingSyncMeta] = useState(false);
     const [loadingSyncAll, setLoadingSyncAll] = useState(false);
     const [loadingGalleryRefresh, setLoadingGalleryRefresh] = useState(false);
     const [loadingTier, setLoadingTier] = useState(false);
@@ -277,6 +279,33 @@ export default function Admin() {
             setMsg(prev => ({ ...prev, upload: { error: getErrorMessage(err), success: null } }));
         } finally {
             setLoadingUpload(false);
+        }
+    };
+
+    const handleSyncMeta = async () => {
+        if (!adminKey) return setMsg(prev => ({ ...prev, main: { error: '请输入管理员密钥' } }));
+
+        const confirmed = window.confirm(
+            '⚡ 确认增量同步配置？\n\n' +
+            '这将从 GitHub 拉取所有模板的 config.json，与 KV 对比后，仅更新有变动的配置（不影响模板 HTML/CSS 代码和版本号）。\n\n' +
+            '消耗估算：\n' +
+            '• N 次 GitHub API 请求（每个模板一次，不消耗 KV）\n' +
+            '• M 次 KV Write + R2 Put（M = 有变化的模板数量）\n\n' +
+            '是否继续？'
+        );
+        if (!confirmed) return;
+
+        clearMsgs();
+        setLoadingSyncMeta(true);
+        saveAdminKey(adminKey);
+        try {
+            const res = await syncTemplateMeta(adminKey);
+            setMsg(prev => ({ ...prev, main: { success: res.message, error: null } }));
+            if (res.changedCount > 0) fetchCurrentTemplates();
+        } catch (err) {
+            setMsg(prev => ({ ...prev, main: { error: '增量同步失败: ' + getErrorMessage(err), success: null } }));
+        } finally {
+            setLoadingSyncMeta(false);
         }
     };
 
@@ -742,6 +771,15 @@ export default function Admin() {
                                        onChange={(e) => setSearchQuery(e.target.value)}
                                        style={{ margin: 0, padding: '5px 10px', width: '120px', fontSize: '0.85rem' }}
                                    />
+                                   <button 
+                                       onClick={handleSyncMeta} 
+                                       className="btn btn--sm" 
+                                       disabled={loadingSyncMeta} 
+                                       style={{ background: '#eff6ff', color: '#2563eb', border: '1px solid #93c5fd' }}
+                                       title="仅从 GitHub 拉取 config.json，与 KV 对比后增量更新元数据（不影响代码版本）。适合只修改了场景/情绪分类等配置时使用。"
+                                   >
+                                       {loadingSyncMeta ? '...' : '⚡ 同步配置'}
+                                   </button>
                                    <button 
                                        onClick={handleSync} 
                                        className="btn btn--sm" 

@@ -4,13 +4,23 @@ import { listTemplates } from '../api/client.js';
 import { INTENT_DATA } from '../data/intents.js';
 import PosterModal from '../components/PosterModal.jsx';
 
+const FILTER_SCENES = [
+    { id: 'send_to_them', text: '发送给TA' },
+    { id: 'self_record', text: '记录自我' },
+    { id: 'celebrate', text: '庆祝 / 纪念' },
+    { id: 'repair', text: '沟通 / 修复' },
+    { id: 'share', text: '分享 / 展示' },
+    { id: 'self_heal', text: '自我疗愈' },
+    { id: 'duo_space', text: '双人空间' },
+];
+
 export default function Gallery() {
     const location = useLocation();
     const navigate = useNavigate();
     
     // Read intent/category from Router state or default to 'all'
     const initialCategory = location.state?.intent || 'all';
-    const initialOption = location.state?.sceneText || 'all';
+    const initialOption = location.state?.scene || location.state?.sceneText || 'all';
     
     const [activeCategory, setActiveCategory] = useState(initialCategory);
     const [activeOption, setActiveOption] = useState(initialOption);
@@ -49,23 +59,11 @@ export default function Gallery() {
 
     // Filter templates based on active category and option
     const filteredTemplates = useMemo(() => {
-        if (activeCategory === 'all') return templates;
-        
-        const intentConfig = INTENT_DATA[activeCategory];
-        if (!intentConfig) return templates;
-
-        const categoryTemplates = templates.filter(t => {
-            // Check if categories array exists (new format) or name matches old format
+        return templates.filter(t => {
             const cats = t.categories || [];
-            return cats.includes(activeCategory);
-        });
-
-        if (activeOption === 'all' || activeOption === '探索全部') return categoryTemplates;
-
-        // Filter by specific Scene ID
-        return categoryTemplates.filter(t => {
-            // Check if template matches the active option's ID or text (for compatibility)
-            return t.scene === activeOption || (t.tags && t.tags.includes(activeOption));
+            const matchCategory = activeCategory === 'all' || cats.includes(activeCategory);
+            const matchOption = activeOption === 'all' || activeOption === '探索全部' || t.scene === activeOption || (t.tags && t.tags.includes(activeOption));
+            return matchCategory && matchOption;
         });
     }, [templates, activeCategory, activeOption]);
 
@@ -92,7 +90,7 @@ export default function Gallery() {
                                     <>
                                         <span className="text-on-surface-variant/50">/</span>
                                         <span className="text-secondary-dim">
-                                            {INTENT_DATA[activeCategory].options.find(o => o.id === activeOption)?.text || activeOption}
+                                            {INTENT_DATA[activeCategory]?.options?.find(o => o.id === activeOption)?.text || FILTER_SCENES.find(o => o.id === activeOption)?.text || activeOption}
                                         </span>
                                     </>
                                 )}
@@ -112,7 +110,7 @@ export default function Gallery() {
                         {/* Level 1: Categories (Emotions) */}
                         <div className="flex flex-wrap items-center gap-2 md:gap-3 pb-1">
                             <button 
-                                onClick={() => { setActiveCategory('all'); setActiveOption('all'); }}
+                                onClick={() => setActiveCategory('all')}
                                 className={`flex items-center gap-2 px-5 py-2 xl:px-6 xl:py-2.5 rounded-full transition-all duration-300 font-medium border shadow-sm flex-shrink-0 ${activeCategory === 'all' ? 'bg-primary/20 text-primary-fixed border-primary/40 shadow-primary/10' : 'text-on-surface-variant hover:bg-surface-container-high border-outline-variant/10 bg-surface-container-lowest'}`}
                             >
                                 <span className="material-symbols-outlined text-lg">grid_view</span>
@@ -121,7 +119,7 @@ export default function Gallery() {
                             {Object.entries(INTENT_DATA).map(([key, data]) => (
                                 <button 
                                     key={key}
-                                    onClick={() => { setActiveCategory(key); setActiveOption('all'); }}
+                                    onClick={() => setActiveCategory(key)}
                                     className={`flex items-center gap-2 px-5 py-2 xl:px-6 xl:py-2.5 rounded-full transition-all duration-300 font-medium border shadow-sm flex-shrink-0 ${activeCategory === key ? 'bg-primary/20 text-primary-fixed border-primary/40 shadow-primary/10' : 'text-on-surface-variant hover:bg-surface-container-high border-outline-variant/10 bg-surface-container-lowest'}`}
                                 >
                                     <span className="material-symbols-outlined text-lg">{data.icon}</span>
@@ -130,30 +128,28 @@ export default function Gallery() {
                             ))}
                         </div>
 
-                        {/* Level 2: Scenarios (Intents) - Only show if a specific category is active */}
-                        {activeCategory !== 'all' && (
-                            <div className="flex flex-wrap items-center gap-2 md:gap-3 animate-in fade-in slide-in-from-top-2 duration-300 pb-1">
-                                <div className="flex items-center shrink-0 mb-0 text-[10px] uppercase tracking-widest text-on-surface-variant/50 font-bold ml-2 mr-2">
-                                    <span className="material-symbols-outlined text-sm mr-1">subtitles</span>
-                                    细分场景
-                                </div>
-                                <button 
-                                    onClick={() => setActiveOption('all')}
-                                    className={`px-5 py-2 rounded-full text-xs font-medium transition-all border flex-shrink-0 ${activeOption === 'all' ? 'bg-secondary/20 text-secondary-dim border-secondary/40 shadow-sm' : 'bg-surface-container-low text-on-surface-variant/60 border-outline-variant/10 hover:bg-surface-container-high'}`}
-                                >
-                                    探索全部
-                                </button>
-                                {INTENT_DATA[activeCategory].options.map((opt, idx) => (
-                                    <button 
-                                        key={idx}
-                                        onClick={() => setActiveOption(opt.id)}
-                                        className={`px-5 py-2 rounded-full text-xs font-medium transition-all border flex-shrink-0 ${activeOption === opt.id ? 'bg-secondary/20 text-secondary-dim border-secondary/40 shadow-sm' : 'bg-surface-container-low text-on-surface-variant/60 border-outline-variant/10 hover:bg-surface-container-high'}`}
-                                    >
-                                        {opt.text}
-                                    </button>
-                                ))}
+                        {/* Level 2: Scenarios (Intents) - Always Show */}
+                        <div className="flex flex-wrap items-center gap-2 md:gap-3 animate-in fade-in duration-300 pb-1">
+                            <div className="flex items-center shrink-0 mb-0 text-[10px] uppercase tracking-widest text-on-surface-variant/50 font-bold ml-2 mr-2">
+                                <span className="material-symbols-outlined text-sm mr-1">subtitles</span>
+                                具体场景
                             </div>
-                        )}
+                            <button 
+                                onClick={() => setActiveOption('all')}
+                                className={`px-5 py-2 rounded-full text-xs font-medium transition-all border flex-shrink-0 ${activeOption === 'all' ? 'bg-secondary/20 text-secondary-dim border-secondary/40 shadow-sm' : 'bg-surface-container-low text-on-surface-variant/60 border-outline-variant/10 hover:bg-surface-container-high'}`}
+                            >
+                                全部场景
+                            </button>
+                            {FILTER_SCENES.map((opt) => (
+                                <button 
+                                    key={opt.id}
+                                    onClick={() => setActiveOption(opt.id)}
+                                    className={`px-5 py-2 rounded-full text-xs font-medium transition-all border flex-shrink-0 ${activeOption === opt.id ? 'bg-secondary/20 text-secondary-dim border-secondary/40 shadow-sm' : 'bg-surface-container-low text-on-surface-variant/60 border-outline-variant/10 hover:bg-surface-container-high'}`}
+                                >
+                                    {opt.text}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -171,9 +167,14 @@ export default function Gallery() {
                         <h3 className="text-xl md:text-2xl font-headline font-medium text-on-surface">
                             {activeCategory === 'all' ? '为你推荐' : INTENT_DATA[activeCategory].categoryLabel}
                         </h3>
-                        {activeOption !== 'all' && (
+                        {activeCategory !== 'all' && activeOption !== 'all' && (
                             <p className="text-sm text-secondary-dim font-light tracking-wide italic">
-                                “{INTENT_DATA[activeCategory].options.find(o => o.id === activeOption)?.text || activeOption}”
+                                “{INTENT_DATA[activeCategory]?.options?.find(o => o.id === activeOption)?.text || FILTER_SCENES.find(o => o.id === activeOption)?.text || activeOption}”
+                            </p>
+                        )}
+                        {activeCategory === 'all' && activeOption !== 'all' && (
+                            <p className="text-sm text-secondary-dim font-light tracking-wide italic">
+                                “{FILTER_SCENES.find(o => o.id === activeOption)?.text || activeOption}”
                             </p>
                         )}
                     </div>
@@ -314,7 +315,7 @@ export default function Gallery() {
                             </h4>
                             <div className="flex flex-wrap gap-2.5">
                                 <button 
-                                    onClick={() => { setActiveCategory('all'); setActiveOption('all'); }}
+                                    onClick={() => setActiveCategory('all')}
                                     className={`flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all font-medium border text-sm ${activeCategory === 'all' ? 'bg-primary/20 text-primary-fixed border-primary/40' : 'text-on-surface-variant hover:bg-surface-container-high border-outline-variant/10 bg-surface-container-low'}`}
                                 >
                                     <span className="material-symbols-outlined text-sm">grid_view</span>
@@ -323,7 +324,7 @@ export default function Gallery() {
                                 {Object.entries(INTENT_DATA).map(([key, data]) => (
                                     <button 
                                         key={key}
-                                        onClick={() => { setActiveCategory(key); setActiveOption('all'); }}
+                                        onClick={() => setActiveCategory(key)}
                                         className={`flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all font-medium border text-sm ${activeCategory === key ? 'bg-primary/20 text-primary-fixed border-primary/40' : 'text-on-surface-variant hover:bg-surface-container-high border-outline-variant/10 bg-surface-container-low'}`}
                                     >
                                         <span className="material-symbols-outlined text-sm">{data.icon}</span>
@@ -334,31 +335,29 @@ export default function Gallery() {
                         </div>
 
                         {/* Mobile Level 2 */}
-                        {activeCategory !== 'all' && (
-                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/60 mb-3 flex items-center">
-                                    <span className="material-symbols-outlined text-sm mr-1">subtitles</span>
-                                    细分场景
-                                </h4>
-                                <div className="flex flex-wrap gap-2.5">
+                        <div className="animate-in fade-in duration-300">
+                            <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/60 mb-3 flex items-center">
+                                <span className="material-symbols-outlined text-sm mr-1">subtitles</span>
+                                具体场景
+                            </h4>
+                            <div className="flex flex-wrap gap-2.5">
+                                <button 
+                                    onClick={() => { setActiveOption('all'); setIsMobileFilterOpen(false); }}
+                                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all border ${activeOption === 'all' ? 'bg-secondary/20 text-secondary-dim border-secondary/40' : 'bg-surface-container-low text-on-surface-variant border-outline-variant/10'}`}
+                                >
+                                    全部场景
+                                </button>
+                                {FILTER_SCENES.map((opt) => (
                                     <button 
-                                        onClick={() => { setActiveOption('all'); setIsMobileFilterOpen(false); }}
-                                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all border ${activeOption === 'all' ? 'bg-secondary/20 text-secondary-dim border-secondary/40' : 'bg-surface-container-low text-on-surface-variant border-outline-variant/10'}`}
+                                        key={opt.id}
+                                        onClick={() => { setActiveOption(opt.id); setIsMobileFilterOpen(false); }}
+                                        className={`px-4 py-2 mb-1 rounded-xl text-sm font-medium transition-all border text-left ${activeOption === opt.id ? 'bg-secondary/20 text-secondary-dim border-secondary/40' : 'bg-surface-container-low text-on-surface-variant border-outline-variant/10'}`}
                                     >
-                                        探索全部
+                                        {opt.text}
                                     </button>
-                                    {INTENT_DATA[activeCategory].options.map((opt, idx) => (
-                                        <button 
-                                            key={idx}
-                                            onClick={() => { setActiveOption(opt.id); setIsMobileFilterOpen(false); }}
-                                            className={`px-4 py-2 mb-1 rounded-xl text-sm font-medium transition-all border text-left ${activeOption === opt.id ? 'bg-secondary/20 text-secondary-dim border-secondary/40' : 'bg-surface-container-low text-on-surface-variant border-outline-variant/10'}`}
-                                        >
-                                            {opt.text}
-                                        </button>
-                                    ))}
-                                </div>
+                                ))}
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
             </div>

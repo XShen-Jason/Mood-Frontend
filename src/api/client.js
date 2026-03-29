@@ -140,6 +140,18 @@ export async function pruneTemplates(adminKey) {
     });
 }
 
+/**
+ * Sync ONLY config.json metadata from GitHub → KV + R2.
+ * Does NOT bump versions or touch HTML/CSS assets.
+ * Admin only.
+ */
+export async function syncTemplateMeta(adminKey) {
+    return apiFetch('/api/template/sync-meta', {
+        method: 'POST',
+        headers: { 'X-Admin-Key': adminKey },
+    });
+}
+
 /** Update a specific user's tier — admin only. */
 export async function updateUserTier(targetUserId, tier, adminKey) {
     return apiFetch('/api/project/config/update-user-tier', {
