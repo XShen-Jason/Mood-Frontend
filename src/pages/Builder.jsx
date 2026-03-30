@@ -437,12 +437,23 @@ export default function Builder() {
             html = baseTag + '\n' + runtimeStyles + '\n' + html;
         }
 
-        // Replace placeholders with initial values and markers
-        html = html.replace(/((?:title|href|src|style|class|id)\s*=\s*["']?)?\{\{([^}]+)\}\}(["']?)?/gi, (match, attrBefore, key, attrAfter) => {
-            const k = key.trim();
-            const val = fieldValues[k] !== undefined ? fieldValues[k] : (DEFAULT_VALUES[k] || '');
-            if (attrBefore || attrAfter) return (attrBefore || '') + val + (attrAfter || '');
-            return `<span data-field="${k}" class="bsr-marker">${val || '&nbsp;'}</span>`;
+        // Replace placeholders safely by parsing HTML tokens
+        // Protect scripts, styles, titles, textareas, and any HTML tag attributes from being wrapped in <span>
+        const regex = /(<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>|<title\b[^>]*>[\s\S]*?<\/title>|<textarea\b[^>]*>[\s\S]*?<\/textarea>|<[^>]+>)|(\{\{([^}]+)\}\})/gi;
+        html = html.replace(regex, (match, tagMatch, tplMatch, key) => {
+            if (tagMatch) {
+                // Inside protected blocks or tags, just replace with raw values
+                return tagMatch.replace(/\{\{([^}]+)\}\}/g, (m, k) => {
+                    k = k.trim();
+                    return fieldValues[k] !== undefined ? fieldValues[k] : (DEFAULT_VALUES[k] || '');
+                });
+            } else if (tplMatch) {
+                // In text nodes, wrap in bsr-marker for real-time live preview updates
+                const k = key.trim();
+                const val = fieldValues[k] !== undefined ? fieldValues[k] : (DEFAULT_VALUES[k] || '');
+                return `<span data-field="${k}" class="bsr-marker">${val || '&nbsp;'}</span>`;
+            }
+            return match;
         });
 
         const runtimeScript = `
