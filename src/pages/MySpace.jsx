@@ -64,8 +64,9 @@ export default function MySpace() {
         setStatusState(newStatus);
         localStorage.setItem('rs_status', JSON.stringify(newStatus));
     };
-    // loadingStatus = false if we have cached data (so quota cards render immediately)
     const [loadingStatus, setLoadingStatus] = useState(() => !localStorage.getItem('rs_status'));
+    // Enforce fresh quota check before actively locking projects
+    const [isQuotaFresh, setIsQuotaFresh] = useState(false);
     const [inviteCount, setInviteCount] = useState(0);
     const [isEditingNickname, setIsEditingNickname] = useState(false);
     const [newNickname, setNewNickname] = useState('');
@@ -135,18 +136,25 @@ export default function MySpace() {
     }, []);
 
     // Load user quota status from backend
-    // L6.7 Sync status whenever profile tier or expiry changes (Realtime reactive)
     useEffect(() => {
         if (!user) return;
+        
+        let isMounted = true;
+        
         getUserStatus(user.id)
             .then(res => {
-                if (res.success) {
+                if (res.success && isMounted) {
                     setStatus(res.data);
+                    setIsQuotaFresh(true);
                 }
             })
             .catch(err => console.error('[Quota Fetch Error]', err))
-            .finally(() => setLoadingStatus(false));
-    }, [user, profile?.tier, profile?.subscription_expires_at]);
+            .finally(() => {
+                if (isMounted) setLoadingStatus(false);
+            });
+            
+        return () => { isMounted = false; };
+    }, [user, profile?.tier, profile?.subscription_expires_at, window.location.pathname]); // Force fetch if routing occurs
 
     async function handleSignOut() {
         localStorage.removeItem('rs_status');
@@ -418,7 +426,8 @@ export default function MySpace() {
 
                                 <div className={`grid gap-3 md:gap-6 relative ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-2 xl:grid-cols-2' : 'grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1'}`}>
                                     {projects.map((p, index) => {
-                                        const isLocked = projects.length > status.maxDomains && index >= status.maxDomains;
+                                        // Wait for fresh quotas before enforcing locks to prevent cached 1-quota from locking newly created pages
+                                        const isLocked = isQuotaFresh && projects.length > status.maxDomains && index >= status.maxDomains;
                                         const url = `https://${p.subdomain}.${BASE_DOMAIN}`;
                                         
                                         const isSecondary = index % 2 !== 0; 
