@@ -246,11 +246,31 @@ export default function Builder() {
         const controller = new AbortController();
         setIsTemplateFetching(true);
 
-        // Pre-fill fields logic
-        const isEditModeJustLoaded = editSubdomain && Object.keys(fieldValues).length > 0;
+        const isEditModeJustLoaded = !!editSubdomain && Object.keys(fieldValues).length > 0;
+        let loadedFromDraft = false;
 
+        // Draft restoration logic
+        if (!editSubdomain) {
+            const draftStr = localStorage.getItem('rs_builder_draft');
+            if (draftStr) {
+                try {
+                    const draft = JSON.parse(draftStr);
+                    if (draft.templateName === selectedTemplate.name) {
+                        setFieldValues(draft.fieldValues || {});
+                        setSubdomain(draft.subdomain || '');
+                        setProjectTitle(draft.projectTitle || '');
+                        setShowViralFooter(draft.showViralFooter ?? true);
+                        loadedFromDraft = true;
+                        localStorage.removeItem('rs_builder_draft');
+                        toast.success('已为您恢复登录前的网页草稿 ✍️');
+                    }
+                } catch(e) {}
+            }
+        }
+
+        // Pre-fill fields logic
         if (!selectedTemplate.static && selectedTemplate.fields) {
-            if (!isEditModeJustLoaded) {
+            if (!isEditModeJustLoaded && !loadedFromDraft) {
                 const initialVals = {};
                 selectedTemplate.fields.forEach(f => {
                     const key = typeof f === 'string' ? f : (f.id || f.key);
@@ -263,7 +283,7 @@ export default function Builder() {
                 setFieldValues(initialVals);
             }
         } else {
-            if (!isEditModeJustLoaded) setFieldValues({});
+            if (!isEditModeJustLoaded && !loadedFromDraft) setFieldValues({});
         }
 
         const apiBase = import.meta.env.VITE_API_BASE_URL ?? '';
@@ -315,6 +335,19 @@ export default function Builder() {
 
         if (!user) {
             toast.error('请先登录后再发布网页 🔑');
+            
+            // Cache the user's hard-typed content so they don't lose it!
+            if (selectedTemplate) {
+                localStorage.setItem('rs_builder_draft', JSON.stringify({
+                    templateName: selectedTemplate.name,
+                    subdomain,
+                    projectTitle,
+                    fieldValues,
+                    showViralFooter,
+                    timestamp: Date.now()
+                }));
+            }
+
             // Check if there's a referral to suggest registration
             const hasRef = searchParams.get('ref') || localStorage.getItem('rs_ref');
             navigate(hasRef ? '/auth?mode=register' : '/auth');

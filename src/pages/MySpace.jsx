@@ -87,10 +87,24 @@ export default function MySpace() {
             });
     }, [user]);
 
-    // Sync local invite code from profile
+    // Sync local invite code from profile. If missing, auto-generate it.
     useEffect(() => {
-        if (profile?.invite_code) setLocalInviteCode(profile.invite_code);
-    }, [profile]);
+        if (!profile || !user) return;
+        if (profile.invite_code) {
+            setLocalInviteCode(profile.invite_code);
+        } else if (!localInviteCode && !generatingCode) {
+            // Auto generate for new users who don't have one!
+            setGeneratingCode(true);
+            const code = user.id.slice(0, 8).toUpperCase();
+            supabase.from('profiles').update({ invite_code: code }).eq('id', user.id).then(({ error }) => {
+                if (!error) {
+                    setLocalInviteCode(code);
+                    if (setProfile) setProfile({ ...profile, invite_code: code });
+                }
+                setGeneratingCode(false);
+            });
+        }
+    }, [profile, user, localInviteCode, generatingCode, setProfile]);
 
     // Load this user's projects from Supabase
     useEffect(() => {
@@ -404,7 +418,7 @@ export default function MySpace() {
 
                                 <div className={`grid gap-3 md:gap-6 relative ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-2 xl:grid-cols-2' : 'grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1'}`}>
                                     {projects.map((p, index) => {
-                                        const isLocked = projects.length > status.maxDomains && index !== 0;
+                                        const isLocked = projects.length > status.maxDomains && index >= status.maxDomains;
                                         const url = `https://${p.subdomain}.${BASE_DOMAIN}`;
                                         
                                         const isSecondary = index % 2 !== 0; 

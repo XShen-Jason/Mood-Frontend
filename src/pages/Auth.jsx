@@ -66,9 +66,21 @@ export default function Auth() {
         }
     }, [searchParams]);
 
-    // If already logged in, redirect to MySpace
+    // If already logged in, redirect to origin (MySpace or Builder recovering from draft)
     useEffect(() => {
-        if (user) navigate('/myspace', { replace: true });
+        if (user) {
+            const draftStr = localStorage.getItem('rs_builder_draft');
+            if (draftStr) {
+                try {
+                    const draft = JSON.parse(draftStr);
+                    if (Date.now() - draft.timestamp < 1000 * 60 * 60 * 24) { // Valid for 24 hours
+                        navigate(`/builder/${draft.templateName}`, { replace: true });
+                        return;
+                    }
+                } catch(e) {}
+            }
+            navigate('/myspace', { replace: true });
+        }
     }, [user, navigate]);
 
     async function handleLogin(e) {
