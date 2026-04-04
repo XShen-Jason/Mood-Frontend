@@ -40,14 +40,21 @@ export default function MySpace() {
     const [tempTitle, setTempTitle] = useState('');
     const [posterProject, setPosterProject] = useState(null); // { url, title, templateTitle }
     const [rawHtml, setRawHtml] = useState(''); // New state for raw HTML content
+    // Safe initial status: maxDomains=Infinity ensures no project is ever locked
+    // before the real quota is fetched from the API, even if localStorage is stale.
     const [status, setStatusState] = useState(() => {
         const cached = localStorage.getItem('rs_status');
         if (cached) {
-            try { return JSON.parse(cached); } catch (e) {}
+            try {
+                const parsed = JSON.parse(cached);
+                // Override maxDomains with Infinity so stale cache never causes false locks.
+                // The real value is fetched from API and replaces this immediately.
+                return { ...parsed, maxDomains: Infinity };
+            } catch (e) {}
         }
         return { 
             count: 0, 
-            maxDomains: 1, 
+            maxDomains: Infinity,  // Safe default: never lock before API confirms quota
             tier: 'free',
             label: '🌟 体验用户',
             dailyUsedEdits: 0,
@@ -64,8 +71,9 @@ export default function MySpace() {
         setStatusState(newStatus);
         localStorage.setItem('rs_status', JSON.stringify(newStatus));
     };
-    const [loadingStatus, setLoadingStatus] = useState(() => !localStorage.getItem('rs_status'));
-    // Enforce fresh quota check before actively locking projects
+    // loadingStatus: true until the API returns real quota data
+    const [loadingStatus, setLoadingStatus] = useState(true);
+    // isQuotaFresh: true only after API confirms the real maxDomains value
     const [isQuotaFresh, setIsQuotaFresh] = useState(false);
     const [inviteCount, setInviteCount] = useState(0);
     const [isEditingNickname, setIsEditingNickname] = useState(false);
@@ -136,10 +144,14 @@ export default function MySpace() {
     }, []);
 
     // Load user quota status from backend
+    // Runs whenever user or profile tier changes (e.g. after upgrade).
+    // isQuotaFresh is reset on each run so projects are never locked
+    // between navigations while the new fetch is in flight.
     useEffect(() => {
         if (!user) return;
         
         let isMounted = true;
+        setIsQuotaFresh(false); // Reset: don't lock while re-fetching
         
         getUserStatus(user.id)
             .then(res => {
@@ -154,7 +166,7 @@ export default function MySpace() {
             });
             
         return () => { isMounted = false; };
-    }, [user, profile?.tier, profile?.subscription_expires_at, window.location.pathname]); // Force fetch if routing occurs
+    }, [user, profile?.tier, profile?.subscription_expires_at]);
 
     async function handleSignOut() {
         localStorage.removeItem('rs_status');
